@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.1 — 2026-10-30
+
+📶 The iPhone's signal bars work.
+
+- **The signal bars now fill up as you bring the iPhone close.** iOS often hears the Mac's Bluetooth
+  signal without its name, so the iPhone couldn't tell it was the Mac it was connected to, and the
+  bars stayed empty. Bringing it close to drop by itself didn't work either. The iPhone now uses the
+  strongest unnamed Pampu signal when it can't hear the Mac by name.
+- The Mac's status line says when Bluetooth is still starting up.
+- With one Mac nearby, the iPhone says *Found — connecting…* rather than asking you to pick one.
+
 ## 1.2.0 — 2026-10-30
 
 🎆 15 drop effects, plus Random. The iPhone throws the stack in style and the Mac plays the

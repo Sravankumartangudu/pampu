@@ -55,6 +55,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         switch ProximityBeacon.shared.state {
         case "off": detail += " · Bluetooth off (tap Send on the iPhone)"
         case "denied": detail += " · Bluetooth not allowed"
+        case "unsupported": detail += " · no Bluetooth LE"
+        case "starting": detail += " · Bluetooth starting…"
         default: break
         }
         return ("ok", detail)

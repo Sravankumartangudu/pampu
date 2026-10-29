@@ -291,7 +291,8 @@ private struct MacCard: View {
 
     private var status: String {
         switch sender.link {
-        case .off, .searching: return sender.macs.isEmpty ? "Searching nearby" : "Found — tap the arrows to pick"
+        case .off, .searching:
+            return sender.macs.isEmpty ? "Searching nearby" : sender.macs.count == 1 ? "Found — connecting…" : "Found — tap the arrows to pick"
         case .connecting: return "Connecting…"
         case .needsPair: return "Not paired yet"
         case .pairing: return "Waiting for you to click Allow"

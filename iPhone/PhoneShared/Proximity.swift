@@ -40,11 +40,17 @@ final class Proximity: NSObject, ObservableObject {
         strongHits = 0
     }
 
-    /// Signal for the watched Mac, or nil if it isn't heard.
+    /// Signal for the watched Mac, or nil if it isn't heard. iOS often hears the Mac's beacon
+    /// without its name; those adverts can't say which Mac they're from, so the strongest one
+    /// stands in for the watched Mac when it isn't heard by name.
     var current: Double? {
-        if let target { return signal[target] }
+        if let target {
+            return signal[target] ?? signal.filter { $0.key.hasPrefix(Self.unnamed) }.values.max()
+        }
         return signal.values.max()
     }
+
+    private static let unnamed = "?"
 
     /// 0…1 for a meter: −90 dBm is nothing, −35 dBm is touching.
     var strength: Double {
@@ -107,8 +113,11 @@ extension Proximity: CBCentralManagerDelegate {
 
     nonisolated func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral,
                                     advertisementData: [String: Any], rssi RSSI: NSNumber) {
-        let name = advertisementData[CBAdvertisementDataLocalNameKey] as? String ?? peripheral.name ?? "?"
-        let id = name.hasPrefix("P") ? String(name.dropFirst()) : name
+        // The Mac's beacon is named "P" + the start of its id. Without the name, the Bluetooth address
+        // keeps each unnamed Mac apart.
+        let name = advertisementData[CBAdvertisementDataLocalNameKey] as? String ?? ""
+        let id = name.hasPrefix("P") && name.count > 1 ? String(name.dropFirst())
+                                                       : Self.unnamed + peripheral.identifier.uuidString
         let value = RSSI.doubleValue
         MainActor.assumeIsolated { heard(id, rssi: value) }
     }
