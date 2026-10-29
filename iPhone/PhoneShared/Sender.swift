@@ -108,7 +108,7 @@ final class Sender: NSObject, ObservableObject {
     var isSending: Bool { if case .sending = job { return true }; return false }
 
     @discardableResult
-    func send(_ items: [Tray.Item]) async -> Bool {
+    func send(_ items: [Tray.Item], effect: DropEffect = .classic) async -> Bool {
         guard link == .ready, let peer = connected, !items.isEmpty, !isSending else { return false }
         let files = items.filter { $0.url != nil }
         let texts = items.compactMap(\.text)
@@ -119,7 +119,7 @@ final class Sender: NSObject, ObservableObject {
 
         // The Mac slides these cards in straight away, before any bytes arrive.
         let shown = Array(items.prefix(3))
-        send(Wire(t: "fling", count: total, kinds: shown.map(\.symbol), thumbs: shown.map { Self.card($0.thumb) }), to: peer)
+        send(Wire(t: "fling", count: total, kinds: shown.map(\.symbol), thumbs: shown.map { Self.card($0.thumb) }, effect: effect.rawValue), to: peer)
         for text in texts {
             send(Wire(t: "text", text: text), to: peer)
             done += 1

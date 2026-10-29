@@ -12,8 +12,10 @@ final class Drop: ObservableObject {
     let tray = Tray()
 
     @Published private(set) var wave = 0
-    /// True from the moment the stack is thrown until the drop finishes (or it comes back on failure).
-    @Published private(set) var flung = false
+    /// The throw playing now: from the moment the stack is let go until its effect has finished and
+    /// the drop is done (or it comes back on failure).
+    @Published private(set) var launch: Launch?
+    var flung: Bool { launch != nil }
     var closeAction = DropSettings.closeAction
     /// Called after a successful drop (the Share extension closes itself).
     var onSent: (() -> Void)?
@@ -25,6 +27,14 @@ final class Drop: ObservableObject {
     private var armed = false
     private var sentPull = 0.0
     private var sentPullAt = Date.distantPast
+    private var lastEffect: DropEffect?
+
+    struct Launch: Equatable {
+        var effect: DropEffect
+        var start = Date()
+        /// How far up the stack already was when it was let go.
+        var fromY: CGFloat = 0
+    }
 
     init() {
         proximity.$isClose.removeDuplicates().dropFirst().sink { [weak self] close in
@@ -51,27 +61,60 @@ final class Drop: ObservableObject {
 
     var canSend: Bool { sender.link == .ready && !tray.isEmpty && !sender.isSending && tray.loading == 0 }
 
-    /// Throws the stack: it flies off the top, the glow rolls and the items go.
-    func dropNow() {
+    /// Throws the stack with the chosen effect (or a random one), and the items go.
+    func dropNow(from y: CGFloat = 0) {
         guard canSend else { return }
         let items = tray.items
+        let effect = DropEffect.resolve(DropSettings.effect, after: lastEffect)
+        lastEffect = effect
+        let go = Launch(effect: effect, fromY: y)
         wave += 1
         armed = false
         sentPull = 0
-        tap.impactOccurred()
-        withAnimation(.easeIn(duration: 0.32)) { flung = true }
+        launch = go
+        feel(effect)
         Task {
-            if await sender.send(items) {
+            if await sender.send(items, effect: effect) {
+                // Let the show finish before the stack is cleared away.
+                let left = effect.sendDuration + 0.1 - Date().timeIntervalSince(go.start)
+                if left > 0 { try? await Task.sleep(for: .seconds(left)) }
                 note.notificationOccurred(.success)
                 tray.clear()
-                flung = false
+                if launch == go { launch = nil }
                 onSent?()
                 try? await Task.sleep(for: .seconds(2.5))
                 sender.clearJob()
             } else {
                 note.notificationOccurred(.error)
-                withAnimation(.spring(duration: 0.6, bounce: 0.3)) { flung = false }
+                withAnimation(.spring(duration: 0.6, bounce: 0.3)) { if launch == go { launch = nil } }
             }
+        }
+    }
+
+    /// Each effect has its own feel in the hand.
+    private func feel(_ e: DropEffect) {
+        func buzz(_ style: UIImpactFeedbackGenerator.FeedbackStyle, _ at: [Double], intensity: CGFloat = 1) {
+            let g = UIImpactFeedbackGenerator(style: style)
+            g.prepare()
+            for t in at {
+                DispatchQueue.main.asyncAfter(deadline: .now() + t) { g.impactOccurred(intensity: intensity) }
+            }
+        }
+        let d = e.sendDuration
+        switch e {
+        case .rocket:
+            buzz(.light, stride(from: 0, to: 0.42, by: 0.05).map { $0 }, intensity: 0.8)
+            buzz(.heavy, [0.45])
+        case .lightning: buzz(.rigid, [0, 0.06, 0.14])
+        case .fireworks: buzz(.medium, [0]); buzz(.heavy, [0.36 * d, 0.5 * d, 0.62 * d])
+        case .hearts: buzz(.medium, [0.05, 0.25])
+        case .confetti: buzz(.heavy, [0]); buzz(.light, [0.15, 0.22, 0.3])
+        case .shatter: buzz(.rigid, [0, 0.04, 0.16]); buzz(.heavy, [0.18])
+        case .blackHole, .portal: buzz(.soft, stride(from: 0, to: 0.7 * d, by: 0.12).map { $0 }); buzz(.heavy, [0.82 * d])
+        case .bubbles: buzz(.soft, [0, 0.3]); buzz(.rigid, [0.95 * d], intensity: 0.6)
+        case .tornado: buzz(.light, stride(from: 0, to: 0.9 * d, by: 0.08).map { $0 }, intensity: 0.7)
+        case .hyperspace: buzz(.light, [0, 0.15, 0.3]); buzz(.heavy, [0.48 * d])
+        default: tap.impactOccurred()
         }
     }
 
@@ -120,6 +163,7 @@ private struct DropScreen<Accessory: View>: View {
     @ObservedObject var proximity: Proximity
     @ObservedObject var tray: Tray
     var accessory: () -> Accessory
+    @State private var zoneCenter = CGPoint.zero
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -141,9 +185,12 @@ private struct DropScreen<Accessory: View>: View {
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 12)
+            EffectLayer(launch: drop.launch, origin: zoneCenter)
             TopWave(trigger: drop.wave)
                 .ignoresSafeArea()
         }
+        .coordinateSpace(name: "drop")
+        .onPreferenceChange(ZoneCenter.self) { zoneCenter = $0 }
         .animation(.spring(duration: 0.35), value: tray.items.count)
         .animation(.easeInOut(duration: 0.25), value: sender.link)
         .alert(sender.notice ?? "", isPresented: Binding(get: { sender.notice != nil }, set: { if !$0 { sender.notice = nil } })) {
@@ -318,6 +365,9 @@ private struct DropZone: View {
             content
         }
         .frame(width: 230, height: 230)
+        .background(GeometryReader { g in
+            Color.clear.preference(key: ZoneCenter.self, value: CGPoint(x: g.frame(in: .named("drop")).midX, y: g.frame(in: .named("drop")).midY))
+        })
         .overlay(alignment: .top) {
             if drop.canSend && drag == 0 && !drop.flung {
                 SwipeHint().offset(y: -56).transition(.opacity)
@@ -329,7 +379,7 @@ private struct DropZone: View {
     }
 
     @ViewBuilder private var content: some View {
-        if case .sent = sender.job {
+        if case .sent = sender.job, drop.launch == nil {
             Image(systemName: "checkmark")
                 .font(.system(size: 70, weight: .bold))
                 .foregroundStyle(Theme.gradient)
@@ -343,11 +393,9 @@ private struct DropZone: View {
             }
         } else {
             ZStack {
-                if drop.flung {
+                if let launch = drop.launch {
                     VStack(spacing: 6) {
-                        Image(systemName: "paperplane.fill")
-                            .font(.system(size: 44, weight: .semibold))
-                            .foregroundStyle(Theme.gradient)
+                        Text(launch.effect.emoji).font(.system(size: 50))
                         if case .sending(let done, let total) = sender.job, total > 1 {
                             Text("\(done) of \(total)").font(.headline).monospacedDigit().foregroundStyle(.secondary)
                         }
@@ -360,8 +408,24 @@ private struct DropZone: View {
     }
 
     /// The pile of what's waiting. Pull it up and it follows your finger, fanning out; let go past
-    /// `reach` (or flick it) and it flies off the top of the screen towards the Mac.
+    /// `reach` (or flick it) and it's thrown with the chosen effect.
     private var stack: some View {
+        TimelineView(.animation(paused: drop.launch == nil)) { tl in
+            let launch = drop.launch
+            let m = launch.map { $0.effect.send(tl.date.timeIntervalSince($0.start) / $0.effect.sendDuration) } ?? EffectMotion()
+            pile
+                .offset(y: launch?.fromY ?? 0)
+                .effectMotion(m)
+        }
+        .contentShape(Rectangle())
+        .gesture(swipe, including: drop.canSend ? .all : .none)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(tray.summary)
+        .accessibilityHint("Swipe up to drop on your Mac")
+        .accessibilityAction(named: "Drop on Mac") { drop.dropNow() }
+    }
+
+    private var pile: some View {
         let f = CGFloat(reached)
         let lift: CGFloat = close && drop.canSend ? -12 : 0
         return ZStack {
@@ -381,14 +445,8 @@ private struct DropZone: View {
                     .offset(x: 18, y: 10)
             }
         }
-        .scaleEffect(drop.flung ? 0.45 : 1 - 0.12 * f)
-        .offset(y: drop.flung ? -1100 : drag + lift)
-        .contentShape(Rectangle())
-        .gesture(swipe, including: drop.canSend ? .all : .none)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(tray.summary)
-        .accessibilityHint("Swipe up to drop on your Mac")
-        .accessibilityAction(named: "Drop on Mac") { drop.dropNow() }
+        .scaleEffect(1 - 0.12 * f)
+        .offset(y: drag + lift)
     }
 
     private var swipe: some Gesture {
@@ -400,13 +458,38 @@ private struct DropZone: View {
             }
             .onEnded { v in
                 if -v.translation.height >= Self.reach || v.predictedEndTranslation.height < -Self.reach * 2.2 {
-                    drop.dropNow()
-                    withAnimation(.easeIn(duration: 0.32)) { drag = 0 }
+                    drop.dropNow(from: drag)
+                    if drop.flung { drag = 0 }   // the throw carries on from here
+                    else { drop.pull(0); withAnimation(.spring(duration: 0.45, bounce: 0.45)) { drag = 0 } }
                 } else {
                     drop.pull(0)
                     withAnimation(.spring(duration: 0.45, bounce: 0.45)) { drag = 0 }
                 }
             }
+    }
+}
+
+/// Where the drop zone's centre is on screen, so the effect can start from the stack.
+private struct ZoneCenter: PreferenceKey {
+    static let defaultValue = CGPoint.zero
+    static func reduce(value: inout CGPoint, nextValue: () -> CGPoint) { value = nextValue() }
+}
+
+/// The full-screen layer the thrown stack's particles, bolts and glows are drawn on.
+private struct EffectLayer: View {
+    var launch: Drop.Launch?
+    var origin: CGPoint
+
+    var body: some View {
+        GeometryReader { g in
+            if let launch {
+                let o = g.frame(in: .named("drop")).origin
+                EffectCanvas(effect: launch.effect, side: .send, start: launch.start,
+                             origin: CGPoint(x: origin.x - o.x, y: origin.y - o.y + launch.fromY))
+            }
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
     }
 }
 

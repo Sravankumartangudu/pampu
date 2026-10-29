@@ -9,7 +9,7 @@
 //   Mac → phone   ok | paired {secret} | denied
 //   phone → Mac   near · batch {count, bytes, names} · text {text} · then one resource per file
 //   phone → Mac   pull {f: 0…1} while the stack is being swiped up (unreliable, ~20 a second;
-//                 the last 0 or 1 reliable) · fling {count, kinds, thumbs} the moment it's let go
+//                 the last 0 or 1 reliable) · fling {count, kinds, thumbs, effect} the moment it's let go
 //   Mac → phone   saved {name} after each file
 import Foundation
 import CryptoKit
@@ -41,6 +41,8 @@ struct Wire: Codable, Equatable {
     /// SF Symbol per item, and a small base64 JPEG ("" if none), for the first few items of a fling.
     var kinds: [String]? = nil
     var thumbs: [String]? = nil
+    /// Which DropEffect the iPhone is playing, so the Mac plays the other half.
+    var effect: String? = nil
     var v: Int? = Brand.protocolVersion
 
     var data: Data { (try? JSONEncoder().encode(self)) ?? Data() }

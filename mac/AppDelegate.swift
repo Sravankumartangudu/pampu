@@ -27,7 +27,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if prefs.receiving { receiver.start() }
         refresh()
 
-        if CommandLine.arguments.contains("--demo") { demo() }
+        if let i = CommandLine.arguments.firstIndex(of: "--demo") {
+            let next = CommandLine.arguments.dropFirst(i + 1).first
+            demo(effect: next.flatMap(DropEffect.init) ?? .classic)
+        }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -94,6 +97,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(toggle("Sort Into Folders by Type", prefs.sortByType, #selector(toggleSort)))
         menu.addItem(toggle("Open Links Automatically", prefs.openLinks, #selector(toggleLinks)))
         menu.addItem(toggle("Play Sounds", prefs.playSound, #selector(toggleSound)))
+
+        let landing = NSMenuItem(title: "Landing Effect", action: nil, keyEquivalent: "")
+        let es = NSMenu()
+        var choices: [(String, String)] = [("match", "Same as the iPhone"), (DropEffect.randomChoice, "🎲  Random")]
+        choices += DropEffect.allCases.map { ($0.rawValue, "\($0.emoji)  \($0.title)") }
+        for (n, (id, title)) in choices.enumerated() {
+            if n == 2 { es.addItem(.separator()) }
+            let i = NSMenuItem(title: title, action: #selector(pickLanding(_:)), keyEquivalent: "")
+            i.target = self
+            i.representedObject = id
+            i.state = prefs.landing == id ? .on : .off
+            if let e = DropEffect(rawValue: id) { i.toolTip = e.blurb }
+            es.addItem(i)
+        }
+        es.addItem(.separator())
+        let hint = NSMenuItem(title: "Pick one to see it. Pick the effect itself on the iPhone: Settings › Drop effect.", action: nil, keyEquivalent: "")
+        hint.isEnabled = false
+        es.addItem(hint)
+        landing.submenu = es
+        menu.addItem(landing)
         menu.addItem(.separator())
 
         let paired = NSMenuItem(title: "Paired iPhones", action: nil, keyEquivalent: "")
@@ -188,6 +211,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func toggleLinks() { prefs.openLinks.toggle() }
     @objc private func toggleSound() { prefs.playSound.toggle() }
 
+    @objc private func pickLanding(_ i: NSMenuItem) {
+        guard let id = i.representedObject as? String else { return }
+        prefs.landing = id
+        demo(effect: DropEffect(rawValue: id) ?? DropEffect.allCases.randomElement() ?? .classic, short: true)
+    }
+
     @objc private func forget(_ i: NSMenuItem) {
         guard let id = i.representedObject as? String else { return }
         Devices.shared.forget(id)
@@ -236,22 +265,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func quit() { NSApp.terminate(nil) }
 
-    /// `--demo`: plays the panel's states (close, the swipe, the throw, receiving, done) without a phone.
-    private func demo() {
+    /// `--demo [effect]`: plays the panel's states (close, the swipe, the throw, receiving, done)
+    /// without a phone. `short` skips straight to the throw, for previewing a landing effect.
+    private func demo(effect: DropEffect, short: Bool = false) {
         let p = DropPanel.shared
         let at = { (t: Double, run: @escaping () -> Void) in DispatchQueue.main.asyncAfter(deadline: .now() + t, execute: run) }
-        p.near(from: "Demo iPhone")
-        for i in 0...20 { at(1.5 + Double(i) * 0.05) { p.pull(Double(i) / 20, from: "Demo iPhone") } }
+        let lead = short ? 0.2 : 3.0
+        if !short {
+            p.near(from: "Demo iPhone")
+            for i in 0...20 { at(1.5 + Double(i) * 0.05) { p.pull(Double(i) / 20, from: "Demo iPhone") } }
+        }
         let samples = ["/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/iPhone.icns",
                        "/System/Applications/Photos.app", "/System/Applications/Preview.app"].map { URL(fileURLWithPath: $0) }
-        at(3) {
+        at(lead) {
             p.fling(from: "Demo iPhone", count: 3,
-                    cards: samples.map { DropModel.Card(image: NSWorkspace.shared.icon(forFile: $0.path), symbol: "photo") })
+                    cards: samples.map { DropModel.Card(image: NSWorkspace.shared.icon(forFile: $0.path), symbol: "photo") },
+                    effect: effect)
         }
-        at(3.4) { p.begin(from: "Demo iPhone", count: 3, names: ["IMG_0042.HEIC"]) }
-        for (n, f) in [(3.8, 0.2), (4.3, 0.55), (4.8, 0.9)] {
-            at(n) { p.progress(f, current: "IMG_0042.HEIC", from: "Demo iPhone") }
+        at(lead + 0.4) { p.begin(from: "Demo iPhone", count: 3, names: ["IMG_0042.HEIC"]) }
+        for (n, f) in [(0.8, 0.2), (1.3, 0.55), (1.8, 0.9)] {
+            at(lead + n) { p.progress(f, current: "IMG_0042.HEIC", from: "Demo iPhone") }
         }
-        at(5.5) { p.done(files: samples, from: "Demo iPhone") }
+        at(lead + 2.5) { p.done(files: samples, from: "Demo iPhone") }
     }
 }

@@ -149,7 +149,8 @@ final class Receiver: NSObject {
                                    symbol: kind)
                 }
                 let count = max(w.count ?? cards.count, 0)
-                DispatchQueue.main.async { DropPanel.shared.fling(from: p.name, count: count, cards: cards) }
+                let effect = w.effect.flatMap(DropEffect.init) ?? .classic   // phones before 1.2 don't say
+                DispatchQueue.main.async { DropPanel.shared.fling(from: p.name, count: count, cards: cards, effect: effect) }
             case "batch":
                 let count = max(w.count ?? 0, 0)
                 lock.withLock {

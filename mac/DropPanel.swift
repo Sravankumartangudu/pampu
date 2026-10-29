@@ -15,6 +15,8 @@ final class DropPanel {
     private var generation = 0
     /// You swiped the panel away mid-drop: stay out of the way until it's done.
     private var tucked = false
+    /// When the landing effect playing now finishes; what landed waits for it.
+    private var landingEnds = Date.distantPast
 
     // MARK: What the receiver tells it
 
@@ -43,9 +45,20 @@ final class DropPanel {
         if f == 0 { scheduleHide(3) }
     }
 
-    /// The stack was let go: its cards slide in before the first byte arrives.
-    func fling(from: String, count: Int, cards: [DropModel.Card]) {
+    /// The stack was let go: its cards land, with the effect the iPhone threw them with, before the
+    /// first byte arrives.
+    func fling(from: String, count: Int, cards: [DropModel.Card], effect thrown: DropEffect) {
+        let choice = Prefs.shared.landing
+        let effect = choice == "match" ? thrown : DropEffect.resolve(choice, after: model.effect)
         tucked = false
+        model.effect = effect
+        model.flungAt = Date()
+        model.landing = true
+        landingEnds = model.flungAt.addingTimeInterval(effect.arriveDuration)
+        let started = model.flungAt
+        DispatchQueue.main.asyncAfter(deadline: .now() + effect.arriveDuration * 1.25) { [weak self] in
+            if self?.model.flungAt == started { self?.model.landing = false }
+        }
         model.phase = .receiving
         model.from = from
         model.count = count
@@ -84,6 +97,7 @@ final class DropPanel {
     }
 
     func done(files: [URL], from: String) {
+        if waitForLanding({ self.done(files: files, from: from) }) { return }
         tucked = false
         model.phase = .done
         model.from = from
@@ -97,6 +111,7 @@ final class DropPanel {
     }
 
     func text(_ text: String, link: URL?, from: String) {
+        if waitForLanding({ self.text(text, link: link, from: from) }) { return }
         tucked = false
         model.phase = .text
         model.from = from
@@ -112,6 +127,14 @@ final class DropPanel {
         model.phase = .failed
         model.message = message
         show(hideAfter: 8)
+    }
+
+    /// Small drops finish before the cards have landed; let the show end first.
+    private func waitForLanding(_ then: @escaping () -> Void) -> Bool {
+        let wait = landingEnds.timeIntervalSinceNow
+        guard wait > 0 else { return false }
+        DispatchQueue.main.asyncAfter(deadline: .now() + wait, execute: then)
+        return true
     }
 
     /// The iPhone went away. Mid-drop, say so; otherwise just tidy up.
@@ -280,12 +303,19 @@ final class DropModel: ObservableObject {
     /// How far the iPhone's stack has been swiped up, 0…1.
     @Published var pull = 0.0
     @Published var incoming: [Card] = []
+    /// The landing effect, and when it started; `landing` while it's playing.
+    @Published var effect: DropEffect = .classic
+    @Published var flungAt = Date.distantPast
+    @Published var landing = false
+    /// Draw one moment of the landing (seconds in), for screenshots.
+    var frozen: Double?
     var onResize: (() -> Void)?
 }
 
 struct DropCard: View {
     @ObservedObject var model: DropModel
     var close: () -> Void
+    @State private var slots: [CGPoint] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -295,7 +325,7 @@ struct DropCard: View {
                 LandingPad(pull: model.pull)
             case .receiving:
                 if !model.incoming.isEmpty {
-                    IncomingRow(cards: model.incoming, extra: model.count - model.incoming.count)
+                    IncomingRow(model: model, extra: model.count - model.incoming.count)
                 }
                 ProgressView(value: model.progress)
                     .tint(Color.accentDrop)
@@ -344,7 +374,15 @@ struct DropCard: View {
             }
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
+        .overlay {
+            if model.landing {
+                EffectCanvas(effect: model.effect, side: .arrive, start: model.flungAt, slots: slots, frozen: model.frozen)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            }
+        }
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(.white.opacity(0.18)))
+        .coordinateSpace(name: "card")
+        .onPreferenceChange(SlotCenters.self) { slots = $0 }
         .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .onTapGesture { if model.phase == .near || model.phase == .failed { close() } }
         // Drag it up with the mouse to put it away (a two-finger swipe works too, see PanelHost).
@@ -451,15 +489,24 @@ private struct LandingPad: View {
     private func stage(_ i: Int) -> Double { min(1, max(0, pull * 1.4 - Double(i) * 0.2)) }
 }
 
-/// The thumbnails the iPhone just threw, sliding down out of the menu bar one after another.
+/// The thumbnails the iPhone just threw, landing one after another with the drop's effect.
 private struct IncomingRow: View {
-    var cards: [DropModel.Card]
+    @ObservedObject var model: DropModel
     var extra: Int
 
     var body: some View {
+        let cards = model.incoming
         HStack(spacing: 12) {
             ForEach(Array(cards.enumerated()), id: \.element.id) { i, card in
-                IncomingCard(card: card, index: i)
+                TimelineView(.animation(paused: !model.landing || model.frozen != nil)) { tl in
+                    let t = (model.frozen ?? tl.date.timeIntervalSince(model.flungAt)) / model.effect.arriveDuration
+                    IncomingCard(card: card)
+                        .effectMotion(model.landing ? model.effect.arrive(t, index: i, of: cards.count) : EffectMotion())
+                }
+                .background(GeometryReader { g in
+                    Color.clear.preference(key: SlotCenters.self, value: [CGPoint(x: g.frame(in: .named("card")).midX,
+                                                                                  y: g.frame(in: .named("card")).midY)])
+                })
             }
             if extra > 0 {
                 Text("+\(extra)").font(.headline).foregroundStyle(.secondary)
@@ -470,10 +517,14 @@ private struct IncomingRow: View {
     }
 }
 
+/// Where each landing card sits in the panel, so the effect can aim at it.
+private struct SlotCenters: PreferenceKey {
+    static let defaultValue: [CGPoint] = []
+    static func reduce(value: inout [CGPoint], nextValue: () -> [CGPoint]) { value += nextValue() }
+}
+
 private struct IncomingCard: View {
     var card: DropModel.Card
-    var index: Int
-    @State private var landed = false
 
     var body: some View {
         ZStack {
@@ -489,12 +540,6 @@ private struct IncomingCard: View {
         .frame(width: 64, height: 64)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .shadow(color: .black.opacity(0.18), radius: 4, y: 2)
-        .rotationEffect(.degrees(landed ? 0 : Double(index - 1) * 14))
-        .offset(y: landed ? 0 : -90)
-        .opacity(landed ? 1 : 0)
-        .onAppear {
-            withAnimation(.spring(duration: 0.55, bounce: 0.4).delay(Double(index) * 0.09)) { landed = true }
-        }
     }
 }
 

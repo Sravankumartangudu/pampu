@@ -26,7 +26,9 @@ Only the latest release gets fixes. Update from the
   before they're saved.
 - **Previews.** When you swipe, the iPhone sends small 120-pixel previews of the first three items
   ahead of the files, over the same encrypted link. The Mac only shows them for a paired iPhone,
-  and keeps them in memory for the length of the panel.
+  and keeps them in memory for the length of the panel. The throw also carries the name of the
+  drop effect; the Mac only matches it against its own list and plays the classic landing for
+  anything it doesn't know.
 - **Safe file names.** Incoming names are cut to the last path part, with slashes and colons
   replaced and line breaks and leading dots removed, so a file can't land outside the drop folder or hide
   itself. Existing files are never overwritten (" 2", " 3"… is added).

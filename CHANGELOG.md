@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.2.0 — 2026-10-30
+
+🎆 15 drop effects, plus Random. The iPhone throws the stack in style and the Mac plays the
+matching landing.
+
+- **Pick one in Settings › Drop effect on the iPhone**, with a live preview that plays as you
+  choose. **🎲 Random** (the new default) picks a different one for every drop.
+- **The effects:** ✨ Classic, 🚀 Rocket, ✈️ Paper Plane, 🕳️ Black Hole, 🎉 Confetti,
+  🎆 Fireworks, 🌌 Hyperspace, ☄️ Comet, 🫧 Bubbles, 🪄 Magic Dust, ⚡ Lightning, 🌀 Portal,
+  💥 Shatter, 💖 Hearts and 🌪️ Tornado. Each has its own throw, particles and haptics on the iPhone,
+  and its own landing on the Mac: the rocket lands on its flames, the comet streaks in, the
+  cards drop out of a portal, the lightning strikes them into place…
+- **🪂 › Landing Effect on the Mac:** *Same as the iPhone* (default), Random, or always one effect.
+  Picking one plays it straight away so you can see it.
+- An older iPhone or Mac without effects still works: the Mac plays the classic landing.
+- `--demo <effect>` plays one effect, and `scripts/effects.sh` draws every effect's frames.
+
 ## 1.1.0 — 2026-10-30
 
 👆 Swipe up to drop, like NameDrop, with both screens reacting together.

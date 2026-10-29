@@ -97,4 +97,9 @@ enum DropSettings {
         get { Keychain.get("closeAction").flatMap(CloseAction.init) ?? .swipe }
         set { Keychain.set("closeAction", newValue.rawValue) }
     }
+    /// "random" or a DropEffect name.
+    static var effect: String {
+        get { Keychain.get("effect").flatMap { $0 == DropEffect.randomChoice || DropEffect(rawValue: $0) != nil ? $0 : nil } ?? DropEffect.randomChoice }
+        set { Keychain.set("effect", newValue) }
+    }
 }

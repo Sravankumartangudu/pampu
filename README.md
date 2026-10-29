@@ -27,6 +27,7 @@ It works without a shared network, so office and guest Wi-Fi are fine.
 |---|---|
 | **Bring it close, swipe up** | Pampu on the Mac sends out a small Bluetooth signal and the iPhone measures how strong it is. Once it's close, both glow and the stack lifts. Swipe it up: the Mac's cards follow your swipe live, and a tick tells you when letting go will drop it. Choose **Touching**, **Close** or **Nearby** in Settings, with a live reading to help. |
 | **Or let it drop by itself** | Pick **Drop Right Away** in Settings and it goes as soon as the iPhone is close. Swiping up and **Send Now** also work at any distance in range, and with Bluetooth off. |
+| **15 drop effects** | 🚀 Rocket, ✈️ Paper Plane, 🕳️ Black Hole, 🎆 Fireworks, ⚡ Lightning, 🌀 Portal and more. The iPhone throws the stack with its own particles and haptics, and the Mac plays the matching landing. Pick one in **Settings › Drop effect** (with a live preview), or **🎲 Random** for a different one every time. |
 | **Swipe it away on the Mac** | Swipe up on the panel with two fingers, or drag it up, to put it away. Mid-drop it stays out of the way and comes back when everything has landed. |
 | **From anywhere on the iPhone** | In the app: **Photos**, **Files** or **Paste**. From any other app: **Share › Pampu** (Photos, Files, Safari, Notes…). Up to 50 items at once. |
 | **No Wi-Fi needed** | A direct, encrypted peer-to-peer link (Apple's MultipeerConnectivity, over peer-to-peer Wi-Fi and Bluetooth). Nothing goes through a server or a cloud, and you don't need an account. |
@@ -61,6 +62,16 @@ It works without a shared network, so office and guest Wi-Fi are fine.
 <td align="center">Done (Dark Mode)</td>
 </tr>
 </table>
+
+### Drop effects
+
+Pick one in **Settings › Drop effect** on the iPhone, or **🎲 Random** (the default) for a new one every drop.
+
+<img src="docs/screenshots/effects-iphone.png" width="820" alt="The 15 throws on the iPhone, mid-flight: Classic, Rocket, Paper Plane, Black Hole, Confetti, Fireworks, Hyperspace, Comet, Bubbles, Magic Dust, Lightning, Portal, Shatter, Hearts and Tornado">
+
+The Mac plays the matching landing as the cards arrive:
+
+<img src="docs/screenshots/effects-mac.png" width="820" alt="The same 15 effects landing in the Mac panel: rocket flames, a paper plane trail, a black hole, confetti, fireworks, star streaks, a comet, bubbles, magic dust, lightning, portal rings, glass shards, hearts and a tornado">
 
 ---
 
@@ -122,11 +133,12 @@ The 🪂 menu on the Mac:
 | **Open Drop Folder / Change Drop Folder…** | `~/Downloads/Pampu` by default. |
 | **Sort Into Folders by Type** · **Open Links Automatically** · **Play Sounds** | On, off, on by default. |
 | **Paired iPhones** | Forget one, or all. A forgotten iPhone has to pair again. |
+| **Landing Effect** | *Same as the iPhone*, 🎲 Random, or always one of the 15. Picking one plays it. |
 | **Appearance** | System, Light or Dark. |
 | **Launch at Login** | Start Pampu when you log in. |
 
 The iPhone's **Settings** has its name (as the Mac shows it), what bringing it close does
-(**Swipe Up** or **Drop Right Away**), how close, photo format, Appearance, and paired Macs.
+(**Swipe Up** or **Drop Right Away**), the **Drop effect**, how close, photo format, Appearance, and paired Macs.
 
 ### If they don't glow
 
@@ -152,7 +164,7 @@ auth {HMAC(secret, id|nonce)} ────────────────�
 CBCentralManager        ◀── BLE advert (RSSI) ───   CBPeripheralManager
   close?  ── near ─────────────────────────────▶   panel slides down, empty slots
   swipe   ── pull {0…1} (live) ────────────────▶   cards follow into the slots
-  let go  ── fling {thumbs} / text / batch ────▶   thumbnails slide in
+  let go  ── fling {thumbs, effect} / text ─────▶   the matching landing plays
           ── one resource per file ────────────▶   ~/Downloads/Pampu/<type>/
 ```
 
@@ -163,6 +175,7 @@ CBCentralManager        ◀── BLE advert (RSSI) ───   CBPeripheralMana
 | `iPhone/Share/` | The Share extension. It sends by itself, so it doesn't need the app to be open. |
 | `iPhone/PhoneShared/` | Shared by both: sender, closeness, tray and the drop screen. |
 | `Shared/Wire.swift` | The message format and the pairing proof, compiled into all three. |
+| `Shared/Effects.swift` | The 15 drop effects: how the stack moves and the particles drawn, for both the throw and the landing. |
 
 ## Build from source
 
@@ -171,7 +184,9 @@ CBCentralManager        ◀── BLE advert (RSSI) ───   CBPeripheralMana
 ./build.sh --install   # build, put it in ~/Applications and open it
 ./build.sh --dist      # also build/Pampu.dmg and build/Pampu.zip
 open build/Pampu.app --args --demo   # play the panel (close, swipe, throw, done) without a phone
+open build/Pampu.app --args --demo rocket   # play one landing effect
 scripts/screenshots.sh # redraw docs/screenshots
+scripts/effects.sh     # draw every effect (docs/screenshots/effects-*.png, frames/ to check by eye)
 ```
 
 Mac: Xcode command-line tools, macOS 14 SDK or later. iPhone: Xcode 15 or later.

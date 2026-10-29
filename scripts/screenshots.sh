@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p docs/screenshots
 BIN=$(mktemp -d)/render
-swiftc -parse-as-library -O -o "$BIN" scripts/render_panel.swift mac/DropPanel.swift mac/Prefs.swift Shared/Wire.swift
+swiftc -parse-as-library -O -o "$BIN" scripts/render_panel.swift mac/DropPanel.swift mac/Prefs.swift Shared/*.swift
 "$BIN"
 rm -f "$BIN"
 ls docs/screenshots/mac-*.png | sed 's/^/✓ /'

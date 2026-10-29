@@ -48,6 +48,12 @@ final class Prefs {
         set { d.set(newValue, forKey: "openLinks") }
     }
 
+    /// How cards land: "match" (whatever the iPhone threw), "random", or a DropEffect name.
+    var landing: String {
+        get { d.string(forKey: "landing") ?? "match" }
+        set { d.set(newValue, forKey: "landing") }
+    }
+
     /// system | light | dark. Missing means system.
     var appearance: String {
         get { d.string(forKey: "appearance") ?? "system" }
