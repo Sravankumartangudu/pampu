@@ -133,11 +133,23 @@ final class Receiver: NSObject {
             let name = w.name ?? "iPhone"
             DispatchQueue.main.async { self.askToPair(peer, id: id, name: name, code: code) }
 
-        case "near", "far", "batch", "text":
+        case "near", "far", "pull", "fling", "batch", "text":
             guard let p = lock.withLock({ peers[peer] }), p.authed else { return }
             switch w.t {
             case "near": DispatchQueue.main.async { DropPanel.shared.near(from: p.name) }
             case "far": DispatchQueue.main.async { DropPanel.shared.far() }
+            case "pull":
+                let f = min(max(w.f ?? 0, 0), 1)
+                DispatchQueue.main.async { DropPanel.shared.pull(f, from: p.name) }
+            case "fling":
+                let kinds = (w.kinds ?? []).prefix(3)
+                let thumbs = w.thumbs ?? []
+                let cards = kinds.enumerated().map { i, kind in
+                    DropModel.Card(image: thumbs.indices.contains(i) ? Data(base64Encoded: thumbs[i]).flatMap(NSImage.init(data:)) : nil,
+                                   symbol: kind)
+                }
+                let count = max(w.count ?? cards.count, 0)
+                DispatchQueue.main.async { DropPanel.shared.fling(from: p.name, count: count, cards: cards) }
             case "batch":
                 let count = max(w.count ?? 0, 0)
                 lock.withLock {
@@ -231,7 +243,7 @@ extension Receiver: MCSessionDelegate {
             send(Wire(t: "hello", id: Prefs.shared.macId, name: macName, nonce: p.nonce), to: peerID)
         case .notConnected:
             let left = lock.withLock { peers.removeValue(forKey: peerID) }
-            if left?.authed == true { DispatchQueue.main.async { DropPanel.shared.far() } }
+            if left?.authed == true { DispatchQueue.main.async { DropPanel.shared.lost() } }
         default:
             break
         }

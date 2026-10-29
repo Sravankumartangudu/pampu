@@ -3,7 +3,8 @@ import SwiftUI
 import UIKit
 
 /// Ties the sender, the proximity reader and the tray together: when the phone is brought close to a
-/// paired Mac with something waiting, it buzzes, the glow rolls down from the top and the items drop.
+/// paired Mac with something waiting, it buzzes and the glow rolls down from the top; swipe the stack
+/// up (or let it go by itself, if you chose that) and the items fly off to the Mac.
 @MainActor
 final class Drop: ObservableObject {
     let sender = Sender()
@@ -11,13 +12,19 @@ final class Drop: ObservableObject {
     let tray = Tray()
 
     @Published private(set) var wave = 0
-    var autoSend = DropSettings.autoSend
+    /// True from the moment the stack is thrown until the drop finishes (or it comes back on failure).
+    @Published private(set) var flung = false
+    var closeAction = DropSettings.closeAction
     /// Called after a successful drop (the Share extension closes itself).
     var onSent: (() -> Void)?
 
     private var bag = Set<AnyCancellable>()
     private let tap = UIImpactFeedbackGenerator(style: .heavy)
     private let note = UINotificationFeedbackGenerator()
+    private let tick = UISelectionFeedbackGenerator()
+    private var armed = false
+    private var sentPull = 0.0
+    private var sentPullAt = Date.distantPast
 
     init() {
         proximity.$isClose.removeDuplicates().dropFirst().sink { [weak self] close in
@@ -30,10 +37,11 @@ final class Drop: ObservableObject {
 
     func start() {
         proximity.threshold = DropSettings.closeness.dBm
-        autoSend = DropSettings.autoSend
+        closeAction = DropSettings.closeAction
         sender.start()
         proximity.start()
         tap.prepare()
+        tick.prepare()
     }
 
     func stop() {
@@ -43,28 +51,50 @@ final class Drop: ObservableObject {
 
     var canSend: Bool { sender.link == .ready && !tray.isEmpty && !sender.isSending && tray.loading == 0 }
 
+    /// Throws the stack: it flies off the top, the glow rolls and the items go.
     func dropNow() {
         guard canSend else { return }
         let items = tray.items
         wave += 1
+        armed = false
+        sentPull = 0
         tap.impactOccurred()
+        withAnimation(.easeIn(duration: 0.32)) { flung = true }
         Task {
             if await sender.send(items) {
                 note.notificationOccurred(.success)
                 tray.clear()
+                flung = false
                 onSent?()
                 try? await Task.sleep(for: .seconds(2.5))
                 sender.clearJob()
             } else {
                 note.notificationOccurred(.error)
+                withAnimation(.spring(duration: 0.6, bounce: 0.3)) { flung = false }
             }
         }
+    }
+
+    /// How far the stack has been swiped (0…1, 1 = far enough that letting go drops it). Ticks as it
+    /// crosses that point, and passes it on to the Mac a few times a second.
+    func pull(_ raw: Double) {
+        let f = min(max(raw, 0), 1)
+        if (f >= 1) != armed {
+            armed = f >= 1
+            tick.selectionChanged()
+        }
+        let now = Date()
+        let final = f == 0 || f == 1
+        guard f != sentPull, final || (abs(f - sentPull) > 0.04 && now.timeIntervalSince(sentPullAt) > 0.05) else { return }
+        sentPull = f
+        sentPullAt = now
+        sender.pull(f, reliable: final)
     }
 
     private func closeChanged(_ close: Bool) {
         sender.near(close)
         guard close else { return }
-        if autoSend && canSend {
+        if closeAction == .drop && canSend {
             dropNow()
         } else {
             wave += 1
@@ -97,7 +127,7 @@ private struct DropScreen<Accessory: View>: View {
             VStack(spacing: 16) {
                 MacCard(sender: sender, proximity: proximity)
                 Spacer(minLength: 8)
-                DropZone(sender: sender, tray: tray, ready: sender.link == .ready, close: proximity.isClose)
+                DropZone(drop: drop, sender: sender, tray: tray, ready: sender.link == .ready, close: proximity.isClose)
                 hint
                     .font(.callout)
                     .multilineTextAlignment(.center)
@@ -143,10 +173,14 @@ private struct DropScreen<Accessory: View>: View {
             case .denied(let msg):
                 Text(msg)
             case .ready:
+                let mac = sender.target?.name ?? "your Mac"
                 if tray.loading > 0 { Text("Getting your items ready…") }
                 else if tray.isEmpty { Text("Pick photos, files or a link to drop.") }
-                else if drop.autoSend && proximity.bluetooth == "on" { Text("Bring the top of your iPhone close to your Mac.") }
-                else { Text("Tap Send to drop \(tray.summary).") }
+                else if drop.closeAction == .drop && proximity.bluetooth == "on" { Text("Bring the top of your iPhone close to \(mac).") }
+                else if proximity.isClose {
+                    Text("Swipe up to drop on \(mac)").font(.headline).foregroundStyle(.primary)
+                } else if proximity.bluetooth == "on" { Text("Bring your iPhone close to \(mac), then swipe the stack up.") }
+                else { Text("Swipe the stack up to drop \(tray.summary).") }
             case .off, .searching, .connecting:
                 Text("Open Pampu on your Mac. Keep Wi-Fi and Bluetooth on — you don’t need the same network.")
             }
@@ -244,11 +278,18 @@ private struct SignalBars: View {
 }
 
 private struct DropZone: View {
+    @ObservedObject var drop: Drop
     @ObservedObject var sender: Sender
     @ObservedObject var tray: Tray
     var ready: Bool
     var close: Bool
     @State private var pulse = false
+    /// How far the stack is pulled up right now (≤ 0), while a finger is on it.
+    @State private var drag: CGFloat = 0
+
+    /// Points the stack has to travel before letting go drops it.
+    private static let reach: CGFloat = 140
+    private var reached: Double { min(1, max(0, Double(-drag / Self.reach))) }
 
     var body: some View {
         ZStack {
@@ -263,8 +304,8 @@ private struct DropZone: View {
             }
             Circle()
                 .fill(.regularMaterial)
-                .overlay(Circle().fill(Theme.gradient.opacity(close ? 0.35 : 0.12)))
-                .shadow(color: Theme.blue.opacity(close ? 0.6 : 0.2), radius: close ? 30 : 14)
+                .overlay(Circle().fill(Theme.gradient.opacity((close ? 0.35 : 0.12) + reached * 0.3)))
+                .shadow(color: Theme.blue.opacity(close ? 0.6 : 0.2 + reached * 0.4), radius: close ? 30 : 14 + reached * 16)
 
             if case .sending = sender.job {
                 Circle()
@@ -277,6 +318,11 @@ private struct DropZone: View {
             content
         }
         .frame(width: 230, height: 230)
+        .overlay(alignment: .top) {
+            if drop.canSend && drag == 0 && !drop.flung {
+                SwipeHint().offset(y: -56).transition(.opacity)
+            }
+        }
         .scaleEffect(close ? 1.06 : 1)
         .animation(.spring(duration: 0.4, bounce: 0.4), value: close)
         .onAppear { pulse = true }
@@ -297,23 +343,90 @@ private struct DropZone: View {
             }
         } else {
             ZStack {
-                ForEach(Array(tray.items.prefix(3).enumerated().reversed()), id: \.element.id) { i, item in
-                    Thumb(item: item, size: 110)
-                        .rotationEffect(.degrees(Double(i) * 8 - 8))
-                        .offset(x: CGFloat(i) * 10 - 10, y: CGFloat(i) * -6)
+                if drop.flung {
+                    VStack(spacing: 6) {
+                        Image(systemName: "paperplane.fill")
+                            .font(.system(size: 44, weight: .semibold))
+                            .foregroundStyle(Theme.gradient)
+                        if case .sending(let done, let total) = sender.job, total > 1 {
+                            Text("\(done) of \(total)").font(.headline).monospacedDigit().foregroundStyle(.secondary)
+                        }
+                    }
+                    .transition(.scale(scale: 0.6).combined(with: .opacity))
                 }
-            }
-            .overlay(alignment: .bottomTrailing) {
-                if tray.items.count > 1 {
-                    Text("\(tray.items.count)")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 8).padding(.vertical, 4)
-                        .background(Capsule().fill(Theme.gradient))
-                        .offset(x: 18, y: 10)
-                }
+                stack
             }
         }
+    }
+
+    /// The pile of what's waiting. Pull it up and it follows your finger, fanning out; let go past
+    /// `reach` (or flick it) and it flies off the top of the screen towards the Mac.
+    private var stack: some View {
+        let f = CGFloat(reached)
+        let lift: CGFloat = close && drop.canSend ? -12 : 0
+        return ZStack {
+            ForEach(Array(tray.items.prefix(3).enumerated().reversed()), id: \.element.id) { i, item in
+                Thumb(item: item, size: 110)
+                    .rotationEffect(.degrees((Double(i) * 8 - 8) * (1 + Double(f))))
+                    .offset(x: (CGFloat(i) * 10 - 10) * (1 + f), y: CGFloat(i) * -6)
+            }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            if tray.items.count > 1 {
+                Text("\(tray.items.count)")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8).padding(.vertical, 4)
+                    .background(Capsule().fill(Theme.gradient))
+                    .offset(x: 18, y: 10)
+            }
+        }
+        .scaleEffect(drop.flung ? 0.45 : 1 - 0.12 * f)
+        .offset(y: drop.flung ? -1100 : drag + lift)
+        .contentShape(Rectangle())
+        .gesture(swipe, including: drop.canSend ? .all : .none)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(tray.summary)
+        .accessibilityHint("Swipe up to drop on your Mac")
+        .accessibilityAction(named: "Drop on Mac") { drop.dropNow() }
+    }
+
+    private var swipe: some Gesture {
+        DragGesture(minimumDistance: 4)
+            .onChanged { v in
+                let t = v.translation.height
+                drag = t < 0 ? t : t / 6          // a little give downwards, like a rubber band
+                drop.pull(Double(-drag / Self.reach))
+            }
+            .onEnded { v in
+                if -v.translation.height >= Self.reach || v.predictedEndTranslation.height < -Self.reach * 2.2 {
+                    drop.dropNow()
+                    withAnimation(.easeIn(duration: 0.32)) { drag = 0 }
+                } else {
+                    drop.pull(0)
+                    withAnimation(.spring(duration: 0.45, bounce: 0.45)) { drag = 0 }
+                }
+            }
+    }
+}
+
+/// Two chevrons drifting up over the stack: "swipe me".
+private struct SwipeHint: View {
+    @State private var up = false
+
+    var body: some View {
+        VStack(spacing: -10) {
+            Image(systemName: "chevron.compact.up")
+            Image(systemName: "chevron.compact.up").opacity(0.5)
+        }
+        .font(.system(size: 30, weight: .semibold))
+        .foregroundStyle(Theme.gradient)
+        .offset(y: up ? -8 : 4)
+        .opacity(up ? 0.4 : 1)
+        .animation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: up)
+        .onAppear { up = true }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 

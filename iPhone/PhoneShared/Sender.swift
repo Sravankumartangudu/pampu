@@ -1,5 +1,6 @@
 import Foundation
 import MultipeerConnectivity
+import UIKit
 
 /// Finds Pampu Macs over MultipeerConnectivity (peer-to-peer Wi-Fi + Bluetooth — no shared network
 /// needed), proves this iPhone is paired, and sends files and text.
@@ -96,6 +97,12 @@ final class Sender: NSObject, ObservableObject {
         send(Wire(t: close ? "near" : "far"), to: peer)
     }
 
+    /// How far the stack has been swiped up (0…1), so the Mac's cards can follow along.
+    func pull(_ f: Double, reliable: Bool) {
+        guard link == .ready, let peer = connected else { return }
+        try? session.send(Wire(t: "pull", f: f).data, toPeers: [peer], with: reliable ? .reliable : .unreliable)
+    }
+
     // MARK: Sending
 
     var isSending: Bool { if case .sending = job { return true }; return false }
@@ -110,6 +117,9 @@ final class Sender: NSObject, ObservableObject {
         progress = 0
         var done = 0
 
+        // The Mac slides these cards in straight away, before any bytes arrive.
+        let shown = Array(items.prefix(3))
+        send(Wire(t: "fling", count: total, kinds: shown.map(\.symbol), thumbs: shown.map { Self.card($0.thumb) }), to: peer)
         for text in texts {
             send(Wire(t: "text", text: text), to: peer)
             done += 1
@@ -141,6 +151,20 @@ final class Sender: NSObject, ObservableObject {
     }
 
     func clearJob() { if !isSending { job = .idle; progress = 0 } }
+
+    /// A 120 px square JPEG of a thumbnail, base64 — a few KB.
+    private static func card(_ image: UIImage?) -> String {
+        guard let image, image.size.width > 0, image.size.height > 0 else { return "" }
+        let side: CGFloat = 120
+        let scale = side / min(image.size.width, image.size.height)
+        let w = image.size.width * scale, h = image.size.height * scale
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let small = UIGraphicsImageRenderer(size: CGSize(width: side, height: side), format: format).image { _ in
+            image.draw(in: CGRect(x: (side - w) / 2, y: (side - h) / 2, width: w, height: h))
+        }
+        return small.jpegData(compressionQuality: 0.6)?.base64EncodedString() ?? ""
+    }
 
     private func sendFile(_ url: URL, name: String, to peer: MCPeerID, update: @escaping (Double) -> Void) async throws {
         var finished = false

@@ -15,27 +15,27 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.0</string>
+	<string>1.1.0</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>2</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>14.0</string>
 	<key>LSUIElement</key>
 	<true/>
-	<key>NSHighResolutionCapable</key>
-	<true/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Pampu sends out a small Bluetooth signal so your iPhone can tell when you've brought it close to this Mac.</string>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Pampu receives files from your paired iPhone over a direct peer-to-peer link.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_pampu-drop._tcp</string>
 		<string>_pampu-drop._udp</string>
 	</array>
+	<key>NSHighResolutionCapable</key>
+	<true/>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2026 Sravankumartangudu. MIT License.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Pampu receives files from your paired iPhone over a direct peer-to-peer link.</string>
 </dict>
 </plist>

@@ -24,6 +24,9 @@ Only the latest release gets fixes. Update from the
   connects. The iPhone answers with an HMAC-SHA256 of the challenge, keyed with its secret, and
   the Mac compares it in constant time. Files from an iPhone that hasn't passed are cancelled
   before they're saved.
+- **Previews.** When you swipe, the iPhone sends small 120-pixel previews of the first three items
+  ahead of the files, over the same encrypted link. The Mac only shows them for a paired iPhone,
+  and keeps them in memory for the length of the panel.
 - **Safe file names.** Incoming names are cut to the last path part, with slashes and colons
   replaced and line breaks and leading dots removed, so a file can't land outside the drop folder or hide
   itself. Existing files are never overwritten (" 2", " 3"… is added).

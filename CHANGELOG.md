@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.1.0 — 2026-10-30
+
+👆 Swipe up to drop, like NameDrop, with both screens reacting together.
+
+- **Swipe the stack up on the iPhone.** It follows your finger and fans out, ticks when letting go
+  will drop it, then flies off the top of the screen. A small flick works too. Chevrons over the
+  stack show it can be swiped, and it lifts when the iPhone is close.
+- **The Mac follows along live.** Its panel now slides down out of the menu bar with three empty
+  slots. As you swipe, cards drop into them and the panel brightens. When you let go, the real
+  thumbnails of what you threw slide in before the first byte arrives.
+- **Swipe the panel away on the Mac:** two fingers up, or drag it up. If you put it away
+  mid-drop, it comes back when the drop is done.
+- **When brought close: Swipe Up (new default) or Drop Right Away**, in the iPhone's Settings.
+  This replaces the *Send when brought close* switch.
+- If the iPhone disconnects mid-drop, the Mac now says so instead of waiting.
+- `--demo` plays the swipe and the throw too.
+
 ## 1.0.0 — 2026-10-29
 
 🪂 First release: NameDrop-style drops from your iPhone to your Mac.

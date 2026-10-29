@@ -4,11 +4,13 @@
 
 # Pampu
 
-**NameDrop for your Mac. Bring your iPhone close and your photos, files and links drop onto it.**
+**NameDrop for your Mac. Bring your iPhone close, swipe up, and your photos, files and links slide onto it.**
 
-Pick what you want on the iPhone, hold the top of the iPhone near your Mac, and it lands in
-`~/Downloads/Pampu`. The iPhone buzzes and a glow rolls down its screen. On the Mac, a panel
-drops in under the menu bar with the progress, then thumbnails with **Open** and **Show in Finder**.
+Pick what you want on the iPhone and hold the top of it near your Mac. Both react: the iPhone buzzes
+and glows, and a panel slides down out of the Mac's menu bar with empty slots. Swipe the stack up on
+the iPhone and cards follow your finger into the Mac's slots; let go and the stack flies off the top
+of the iPhone while its thumbnails slide in on the Mac. Everything lands in `~/Downloads/Pampu`,
+with **Open** and **Show in Finder**.
 It works without a shared network, so office and guest Wi-Fi are fine.
 
 *Pampu (పంపు) means "send" in Telugu.*
@@ -23,8 +25,9 @@ It works without a shared network, so office and guest Wi-Fi are fine.
 
 | | |
 |---|---|
-| **Bring it close, it drops** | Pampu on the Mac sends out a small Bluetooth signal. The iPhone measures how strong it is, and once it's close for two readings in a row, everything waiting goes. Choose **Touching**, **Close** or **Nearby** in Settings, with a live reading to help. |
-| **Or tap Send** | **Send Now** works at any distance in range, and when Bluetooth is off. Turn off *Send when brought close* if you'd rather always tap. |
+| **Bring it close, swipe up** | Pampu on the Mac sends out a small Bluetooth signal and the iPhone measures how strong it is. Once it's close, both glow and the stack lifts. Swipe it up: the Mac's cards follow your swipe live, and a tick tells you when letting go will drop it. Choose **Touching**, **Close** or **Nearby** in Settings, with a live reading to help. |
+| **Or let it drop by itself** | Pick **Drop Right Away** in Settings and it goes as soon as the iPhone is close. Swiping up and **Send Now** also work at any distance in range, and with Bluetooth off. |
+| **Swipe it away on the Mac** | Swipe up on the panel with two fingers, or drag it up, to put it away. Mid-drop it stays out of the way and comes back when everything has landed. |
 | **From anywhere on the iPhone** | In the app: **Photos**, **Files** or **Paste**. From any other app: **Share › Pampu** (Photos, Files, Safari, Notes…). Up to 50 items at once. |
 | **No Wi-Fi needed** | A direct, encrypted peer-to-peer link (Apple's MultipeerConnectivity, over peer-to-peer Wi-Fi and Bluetooth). Nothing goes through a server or a cloud, and you don't need an account. |
 | **Pair once** | The first time, the iPhone shows a code and the Mac asks you, showing the same code. After that the Mac checks the iPhone's secret on every connection. |
@@ -34,12 +37,20 @@ It works without a shared network, so office and guest Wi-Fi are fine.
 
 <table>
 <tr>
-<td><img src="docs/screenshots/mac-near.png" width="400" alt="iPhone is close: hold it there to drop what's waiting in Pampu"></td>
-<td><img src="docs/screenshots/mac-receiving-dark.png" width="400" alt="Receiving 3 items from iPhone, with a progress bar and the file name, in Dark Mode"></td>
+<td><img src="docs/screenshots/mac-near.png" width="400" alt="iPhone is close: swipe up on the iPhone to drop what's waiting, above three empty dashed slots"></td>
+<td><img src="docs/screenshots/mac-swipe.png" width="400" alt="iPhone is dropping: keep swiping up, with cards sliding down into the three slots"></td>
 </tr>
 <tr>
 <td align="center">The iPhone is close</td>
-<td align="center">Receiving (Dark Mode)</td>
+<td align="center">Swiping up on the iPhone</td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/mac-receiving-dark.png" width="400" alt="Receiving 3 items from iPhone: the thumbnails that slid in, a progress bar and the file name, in Dark Mode"></td>
+<td><img src="docs/screenshots/mac-done.png" width="400" alt="Received 3 items, with Show in Finder"></td>
+</tr>
+<tr>
+<td align="center">Let go: the thumbnails slide in (Dark Mode)</td>
+<td align="center">Done</td>
 </tr>
 <tr>
 <td><img src="docs/screenshots/mac-text.png" width="400" alt="Link received from iPhone, copied to the clipboard, with an Open Link button"></td>
@@ -99,7 +110,8 @@ xcrun devicectl device install app --device <iPhone id> build/Build/Products/Deb
 1. **Pair.** Open Pampu on both. The iPhone finds the Mac by itself. Tap **Pair with …**, check the
    code matches on both screens, and click **Allow** on the Mac.
 2. **Pick.** Photos, Files or Paste in the app, or **Share › Pampu** from any app.
-3. **Drop.** Hold the top of the iPhone near the Mac's keyboard or screen. Or tap **Send Now**.
+3. **Drop.** Hold the top of the iPhone near the Mac's keyboard or screen. When both glow, swipe
+   the stack up and let go. Or tap **Send Now**.
 
 The 🪂 menu on the Mac:
 
@@ -113,16 +125,17 @@ The 🪂 menu on the Mac:
 | **Appearance** | System, Light or Dark. |
 | **Launch at Login** | Start Pampu when you log in. |
 
-The iPhone's **Settings** has its name (as the Mac shows it), *Send when brought close*, how
-close, photo format, Appearance, and paired Macs.
+The iPhone's **Settings** has its name (as the Mac shows it), what bringing it close does
+(**Swipe Up** or **Drop Right Away**), how close, photo format, Appearance, and paired Macs.
 
-### If the drop doesn't start by itself
+### If they don't glow
 
-- Check the signal bars on the iPhone. If they never fill up, pick **Nearby** in Settings. If it
-  drops too early, pick **Touching**.
+- Check the signal bars on the iPhone. If they never fill up, pick **Nearby** in Settings. If the
+  glow comes too early, pick **Touching**.
+- You don't have to wait for the glow: swiping up works from anywhere in range.
 - The Bluetooth antenna is in a different place on each Mac model; try the keyboard and the top of
   the screen.
-- **Send Now** always works while the iPhone says *Connected*.
+- Swiping up and **Send Now** always work while the iPhone says *Connected*.
 
 ---
 
@@ -137,7 +150,10 @@ MCNearbyServiceBrowser  ── finds _pampu-drop ──▶   MCNearbyServiceAdve
 auth {HMAC(secret, id|nonce)} ──────────────────▶   checks it (constant time)  → ok
   or pair {code} ───────────────────────────────▶   asks you → paired {secret}
 CBCentralManager        ◀── BLE advert (RSSI) ───   CBPeripheralManager
-  close?  ── near / batch / files / text ──────▶   DropPanel + ~/Downloads/Pampu/<type>/
+  close?  ── near ─────────────────────────────▶   panel slides down, empty slots
+  swipe   ── pull {0…1} (live) ────────────────▶   cards follow into the slots
+  let go  ── fling {thumbs} / text / batch ────▶   thumbnails slide in
+          ── one resource per file ────────────▶   ~/Downloads/Pampu/<type>/
 ```
 
 | Folder | |
@@ -154,7 +170,7 @@ CBCentralManager        ◀── BLE advert (RSSI) ───   CBPeripheralMana
 ./build.sh             # build/Pampu.app (universal)
 ./build.sh --install   # build, put it in ~/Applications and open it
 ./build.sh --dist      # also build/Pampu.dmg and build/Pampu.zip
-open build/Pampu.app --args --demo   # play the panel's states without a phone
+open build/Pampu.app --args --demo   # play the panel (close, swipe, throw, done) without a phone
 scripts/screenshots.sh # redraw docs/screenshots
 ```
 

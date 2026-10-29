@@ -81,14 +81,20 @@ enum Closeness: String, CaseIterable, Identifiable {
     }
 }
 
+/// What bringing the iPhone close does: wait for a swipe up (like NameDrop), or drop straight away.
+enum CloseAction: String, CaseIterable, Identifiable {
+    case swipe, drop
+    var id: String { rawValue }
+    var label: String { self == .swipe ? "Swipe Up" : "Drop Right Away" }
+}
+
 enum DropSettings {
     static var closeness: Closeness {
         get { Keychain.get("closeness").flatMap(Closeness.init) ?? .close }
         set { Keychain.set("closeness", newValue.rawValue) }
     }
-    /// Send as soon as the iPhone is brought close (otherwise only the Send button sends).
-    static var autoSend: Bool {
-        get { Keychain.get("autoSend") != "no" }
-        set { Keychain.set("autoSend", newValue ? "yes" : "no") }
+    static var closeAction: CloseAction {
+        get { Keychain.get("closeAction").flatMap(CloseAction.init) ?? .swipe }
+        set { Keychain.set("closeAction", newValue.rawValue) }
     }
 }

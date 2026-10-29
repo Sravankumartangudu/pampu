@@ -1,6 +1,6 @@
 #!/bin/bash
 # Renders the README screenshots of the Mac drop panel (off-screen, no phone needed).
-#   scripts/screenshots.sh   → docs/screenshots/mac-near.png, mac-receiving.png, mac-done.png, mac-text.png (+ -dark)
+#   scripts/screenshots.sh   → docs/screenshots/mac-near.png, mac-swipe.png, mac-receiving.png, mac-done.png, mac-text.png (+ -dark)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p docs/screenshots

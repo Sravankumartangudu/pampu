@@ -2,19 +2,25 @@ import AppKit
 import SwiftUI
 import QuickLookThumbnailing
 
-/// The little card that drops down under the menu bar (by the notch) while an iPhone is close or
-/// sending — a glow wave rolls out of the top edge, then thumbnails of what landed.
+/// The little card that slides down out of the menu bar (by the notch) while an iPhone is close or
+/// sending. Ghost cards follow the iPhone's swipe into their slots; when it's let go, the real
+/// thumbnails slide in, then what landed. Swipe the card up (or click it while it's waiting) to put it away.
 final class DropPanel {
     static let shared = DropPanel()
 
     private let model = DropModel()
     private var panel: NSPanel?
     private var hideWork: DispatchWorkItem?
+    /// Bumped on every show and hide, so a fade-out that's overtaken doesn't close the panel.
+    private var generation = 0
+    /// You swiped the panel away mid-drop: stay out of the way until it's done.
+    private var tucked = false
 
     // MARK: What the receiver tells it
 
     func near(from: String) {
         guard model.phase == .hidden || model.phase == .near else { return }
+        if model.phase == .hidden { model.pull = 0; model.incoming = [] }
         model.phase = .near
         model.from = from
         model.wave += 1
@@ -22,10 +28,41 @@ final class DropPanel {
     }
 
     func far() {
-        if model.phase == .near { hide() }
+        if model.phase == .near && model.pull == 0 { hide() }
+    }
+
+    /// The iPhone's stack is being swiped up (0…1). Works at any distance, so it can open the panel too.
+    func pull(_ f: Double, from: String) {
+        guard model.phase == .hidden || model.phase == .near else { return }
+        if model.phase == .hidden {
+            guard f > 0.02 else { return }
+            near(from: from)
+        }
+        model.pull = f
+        hideWork?.cancel()
+        if f == 0 { scheduleHide(3) }
+    }
+
+    /// The stack was let go: its cards slide in before the first byte arrives.
+    func fling(from: String, count: Int, cards: [DropModel.Card]) {
+        tucked = false
+        model.phase = .receiving
+        model.from = from
+        model.count = count
+        model.progress = 0
+        model.current = ""
+        model.files = []
+        model.thumbs = [:]
+        model.message = ""
+        model.pull = 0
+        model.incoming = cards
+        model.wave += 1
+        show(hideAfter: nil)
+        scheduleHide(20)   // in case nothing follows; the first file cancels this
     }
 
     func begin(from: String, count: Int, names: [String]) {
+        let flung = model.phase == .receiving && !model.incoming.isEmpty
         model.phase = .receiving
         model.from = from
         model.count = count
@@ -34,40 +71,62 @@ final class DropPanel {
         model.files = []
         model.thumbs = [:]
         model.message = ""
-        model.wave += 1
+        if !flung { model.incoming = []; model.wave += 1 }
+        if tucked { hideWork?.cancel(); return }
         show(hideAfter: nil)
     }
 
     func progress(_ fraction: Double, current: String, from: String) {
+        if tucked { return }
         if model.phase != .receiving { begin(from: from, count: 0, names: [current]) }
         model.progress = fraction
         model.current = SafeName.clean(current)
     }
 
     func done(files: [URL], from: String) {
+        tucked = false
         model.phase = .done
         model.from = from
         model.files = files
         model.count = files.count
         model.progress = 1
         model.message = folderLabel(files)
+        model.incoming = []
         for url in files.prefix(4) { thumbnail(url) }
         show(hideAfter: 7)
     }
 
     func text(_ text: String, link: URL?, from: String) {
+        tucked = false
         model.phase = .text
         model.from = from
         model.text = text
         model.link = link
+        model.incoming = []
         model.wave += 1
         show(hideAfter: 7)
     }
 
     func failed(_ message: String) {
+        tucked = false
         model.phase = .failed
         model.message = message
         show(hideAfter: 8)
+    }
+
+    /// The iPhone went away. Mid-drop, say so; otherwise just tidy up.
+    func lost() {
+        if model.phase == .receiving {
+            failed("\(model.from) disconnected before the drop finished.")
+        } else if model.phase == .near {
+            hide()
+        }
+    }
+
+    /// Swiped up or clicked away.
+    func dismiss() {
+        if model.phase == .receiving { tucked = true }
+        hide()
     }
 
     // MARK: Window
@@ -75,11 +134,23 @@ final class DropPanel {
     private func show(hideAfter seconds: Double?) {
         let p = panel ?? makePanel()
         panel = p
-        place(p)
+        generation += 1
         if !p.isVisible {
+            // Slide down out of the menu bar.
+            place(p)
+            let end = p.frame
+            p.setFrame(end.offsetBy(dx: 0, dy: min(end.height, 60)), display: false)
             p.alphaValue = 0
             p.orderFrontRegardless()
-            NSAnimationContext.runAnimationGroup { $0.duration = 0.18; p.animator().alphaValue = 1 }
+            NSAnimationContext.runAnimationGroup {
+                $0.duration = 0.38
+                $0.timingFunction = CAMediaTimingFunction(controlPoints: 0.2, 0.9, 0.25, 1)
+                p.animator().setFrame(end, display: true)
+                p.animator().alphaValue = 1
+            }
+        } else {
+            place(p, animated: true)
+            if p.alphaValue < 1 { p.animator().alphaValue = 1 }
         }
         hideWork?.cancel()
         if let seconds { scheduleHide(seconds) }
@@ -99,7 +170,16 @@ final class DropPanel {
     func hide() {
         hideWork?.cancel()
         guard let p = panel, p.isVisible else { model.phase = .hidden; return }
-        NSAnimationContext.runAnimationGroup({ $0.duration = 0.25; p.animator().alphaValue = 0 }) {
+        generation += 1
+        let mine = generation
+        // Slide back up into the menu bar.
+        NSAnimationContext.runAnimationGroup({
+            $0.duration = 0.25
+            $0.timingFunction = CAMediaTimingFunction(name: .easeIn)
+            p.animator().setFrame(p.frame.offsetBy(dx: 0, dy: 40), display: true)
+            p.animator().alphaValue = 0
+        }) {
+            guard mine == self.generation else { return }
             p.orderOut(nil)
             self.model.phase = .hidden
         }
@@ -116,23 +196,28 @@ final class DropPanel {
         p.hidesOnDeactivate = false
         p.becomesKeyOnlyIfNeeded = true
         p.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
-        let host = NSHostingView(rootView: DropCard(model: model, close: { [weak self] in self?.hide() }))
+        let host = PanelHost(rootView: DropCard(model: model, close: { [weak self] in self?.dismiss() }))
         host.sizingOptions = [.intrinsicContentSize]
+        host.onSwipeUp = { [weak self] in self?.dismiss() }
         p.contentView = host
         model.onResize = { [weak self] in
             guard let self, let p = self.panel else { return }
-            self.place(p)
+            self.place(p, animated: p.isVisible)
         }
         return p
     }
 
     /// Centred just under the menu bar, on the screen with the menu bar.
-    private func place(_ p: NSPanel) {
+    private func place(_ p: NSPanel, animated: Bool = false) {
         guard let screen = NSScreen.screens.first, let view = p.contentView else { return }
         let size = view.fittingSize
         let vf = screen.visibleFrame
-        p.setFrame(NSRect(x: vf.midX - size.width / 2, y: vf.maxY - size.height - 6, width: size.width, height: size.height),
-                   display: true)
+        let frame = NSRect(x: vf.midX - size.width / 2, y: vf.maxY - size.height - 6, width: size.width, height: size.height)
+        if animated {
+            NSAnimationContext.runAnimationGroup { $0.duration = 0.22; p.animator().setFrame(frame, display: true) }
+        } else {
+            p.setFrame(frame, display: true)
+        }
     }
 
     private func folderLabel(_ files: [URL]) -> String {
@@ -154,8 +239,33 @@ final class DropPanel {
 
 // MARK: - SwiftUI card
 
+/// Hosts the card, and turns a two-finger swipe up on it into "put it away".
+final class PanelHost: NSHostingView<DropCard> {
+    var onSwipeUp: (() -> Void)?
+    private var travel: CGFloat = 0
+    private var fired = false
+
+    override func scrollWheel(with e: NSEvent) {
+        guard e.hasPreciseScrollingDeltas else { return super.scrollWheel(with: e) }
+        if e.phase == .began { travel = 0; fired = false }
+        // How far the fingers moved up, whichever way scrolling is set.
+        travel += e.isDirectionInvertedFromDevice ? -e.scrollingDeltaY : e.scrollingDeltaY
+        if !fired && travel > 30 {
+            fired = true
+            onSwipeUp?()
+        }
+        if e.phase == .ended || e.phase == .cancelled { travel = 0 }
+    }
+}
+
 final class DropModel: ObservableObject {
     enum Phase { case hidden, near, receiving, done, text, failed }
+    /// One of the items the iPhone just threw, as it slides in.
+    struct Card: Identifiable {
+        let id = UUID()
+        var image: NSImage?
+        var symbol: String
+    }
     @Published var phase: Phase = .hidden { didSet { if phase != oldValue { DispatchQueue.main.async { self.onResize?() } } } }
     @Published var from = ""
     @Published var count = 0
@@ -167,6 +277,9 @@ final class DropModel: ObservableObject {
     @Published var text = ""
     @Published var link: URL?
     @Published var wave = 0
+    /// How far the iPhone's stack has been swiped up, 0…1.
+    @Published var pull = 0.0
+    @Published var incoming: [Card] = []
     var onResize: (() -> Void)?
 }
 
@@ -178,10 +291,16 @@ struct DropCard: View {
         VStack(alignment: .leading, spacing: 10) {
             header
             switch model.phase {
+            case .near:
+                LandingPad(pull: model.pull)
             case .receiving:
+                if !model.incoming.isEmpty {
+                    IncomingRow(cards: model.incoming, extra: model.count - model.incoming.count)
+                }
                 ProgressView(value: model.progress)
                     .tint(Color.accentDrop)
-                Text(model.current).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                Text(model.current.isEmpty ? "Getting ready…" : model.current)
+                    .font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
             case .done:
                 thumbs
                 HStack {
@@ -208,7 +327,7 @@ struct DropCard: View {
                 .controlSize(.small)
             case .failed:
                 Text(model.message).font(.callout).foregroundStyle(.secondary).lineLimit(3)
-            case .near, .hidden:
+            case .hidden:
                 EmptyView()
             }
         }
@@ -217,12 +336,19 @@ struct DropCard: View {
         .background {
             ZStack(alignment: .top) {
                 RoundedRectangle(cornerRadius: 18, style: .continuous).fill(.regularMaterial)
+                // Brightens from the top as the iPhone's swipe gets further.
+                LinearGradient(colors: [Color.accentDrop.opacity(0.4 * model.pull), Color.accentDrop2.opacity(0.15 * model.pull), .clear],
+                               startPoint: .top, endPoint: .bottom)
+                    .animation(.easeOut(duration: 0.15), value: model.pull)
                 Wave(trigger: model.wave)
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(.white.opacity(0.18)))
+        .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .onTapGesture { if model.phase == .near || model.phase == .failed { close() } }
+        // Drag it up with the mouse to put it away (a two-finger swipe works too, see PanelHost).
+        .gesture(DragGesture(minimumDistance: 10).onEnded { if $0.translation.height < -20 { close() } })
     }
 
     private var header: some View {
@@ -252,7 +378,7 @@ struct DropCard: View {
 
     private var title: String {
         switch model.phase {
-        case .near: return "\(model.from) is close"
+        case .near: return model.pull > 0 ? "\(model.from) is dropping" : "\(model.from) is close"
         case .receiving: return model.count > 1 ? "Receiving \(model.count) items" : "Receiving"
         case .done: return model.count == 1 ? "Received 1 item" : "Received \(model.count) items"
         case .text: return model.link == nil ? "Text received" : "Link received"
@@ -263,7 +389,9 @@ struct DropCard: View {
 
     private var subtitle: String {
         switch model.phase {
-        case .near: return "Hold it there to drop what’s waiting in \(Brand.name)"
+        case .near:
+            if model.pull >= 1 { return "Let go on the iPhone to drop" }
+            return model.pull > 0 ? "Keep swiping up…" : "Swipe up on the iPhone to drop what’s waiting"
         case .receiving, .done, .text: return "from \(model.from)"
         case .failed: return Brand.name
         case .hidden: return ""
@@ -287,6 +415,85 @@ struct DropCard: View {
             if model.files.count > 4 {
                 Text("+\(model.files.count - 4)").font(.headline).foregroundStyle(.secondary).frame(width: 40)
             }
+        }
+    }
+}
+
+/// Three empty slots while the iPhone is close. As its stack is swiped up, a card drops into each
+/// slot from the top edge, one a little behind the other.
+private struct LandingPad: View {
+    var pull: Double
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ForEach(0..<3) { i in
+                let s = stage(i)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
+                        .foregroundStyle(.secondary.opacity(0.6 - 0.4 * s))
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(LinearGradient(colors: [.accentDrop, .accentDrop2], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .overlay(Image(systemName: "arrow.down").font(.system(size: 20, weight: .bold)).foregroundStyle(.white))
+                        .shadow(color: .accentDrop.opacity(0.4 * s), radius: 6, y: 2)
+                        .scaleEffect(0.8 + 0.2 * s)
+                        .offset(y: -44 * (1 - s))
+                        .opacity(s)
+                }
+                .frame(width: 64, height: 64)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 2)
+        .animation(.interactiveSpring(response: 0.25, dampingFraction: 0.75), value: pull)
+    }
+
+    private func stage(_ i: Int) -> Double { min(1, max(0, pull * 1.4 - Double(i) * 0.2)) }
+}
+
+/// The thumbnails the iPhone just threw, sliding down out of the menu bar one after another.
+private struct IncomingRow: View {
+    var cards: [DropModel.Card]
+    var extra: Int
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ForEach(Array(cards.enumerated()), id: \.element.id) { i, card in
+                IncomingCard(card: card, index: i)
+            }
+            if extra > 0 {
+                Text("+\(extra)").font(.headline).foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 2)
+    }
+}
+
+private struct IncomingCard: View {
+    var card: DropModel.Card
+    var index: Int
+    @State private var landed = false
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.quaternary)
+            if let image = card.image {
+                Image(nsImage: image).resizable().scaledToFill()
+            } else {
+                Image(systemName: card.symbol)
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(Color.accentDrop)
+            }
+        }
+        .frame(width: 64, height: 64)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .shadow(color: .black.opacity(0.18), radius: 4, y: 2)
+        .rotationEffect(.degrees(landed ? 0 : Double(index - 1) * 14))
+        .offset(y: landed ? 0 : -90)
+        .opacity(landed ? 1 : 0)
+        .onAppear {
+            withAnimation(.spring(duration: 0.55, bounce: 0.4).delay(Double(index) * 0.09)) { landed = true }
         }
     }
 }

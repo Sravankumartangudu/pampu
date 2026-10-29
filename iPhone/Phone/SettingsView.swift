@@ -10,7 +10,7 @@ struct SettingsView: View {
     @AppStorage("compatiblePhotos") private var compatiblePhotos = false
     @State private var name = Identity.name
     @State private var closeness = DropSettings.closeness
-    @State private var autoSend = DropSettings.autoSend
+    @State private var closeAction = DropSettings.closeAction
 
     var body: some View {
         NavigationStack {
@@ -27,21 +27,26 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Toggle("Send when brought close", isOn: $autoSend)
-                        .onChange(of: autoSend) { _, on in DropSettings.autoSend = on; drop.autoSend = on }
+                    Picker("When brought close", selection: $closeAction) {
+                        ForEach(CloseAction.allCases) { Text($0.label).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    .onChange(of: closeAction) { _, a in DropSettings.closeAction = a; drop.closeAction = a }
                     Picker("How close", selection: $closeness) {
                         ForEach(Closeness.allCases) { Text($0.label).tag($0) }
                     }
                     .pickerStyle(.segmented)
                     .onChange(of: closeness) { _, c in DropSettings.closeness = c; proximity.threshold = c.dBm }
                     LabeledContent("Signal now", value: proximity.current.map { "\(Int($0)) dBm" } ?? "—")
-                    LabeledContent("Drops at", value: "\(Int(closeness.dBm)) dBm or stronger")
+                    LabeledContent("Counts as close at", value: "\(Int(closeness.dBm)) dBm or stronger")
                 } header: {
-                    Text("Bring close to drop")
+                    Text("Bringing it close")
                 } footer: {
                     Text(proximity.bluetooth == "on"
-                         ? "Hold the top of your iPhone near your Mac’s keyboard or screen. If it drops too early, pick Touching; if it never drops, pick Nearby."
-                         : "Bluetooth is \(proximity.bluetooth == "denied" ? "not allowed for Pampu — turn it on in Settings › Pampu" : "off"). The Send button still works.")
+                         ? (closeAction == .swipe
+                            ? "Hold the top of your iPhone near your Mac’s keyboard or screen; both glow, then swipe the stack up. If the glow comes too early, pick Touching; if it never comes, pick Nearby."
+                            : "Hold the top of your iPhone near your Mac’s keyboard or screen and it drops by itself. If it drops too early, pick Touching; if it never drops, pick Nearby.")
+                         : "Bluetooth is \(proximity.bluetooth == "denied" ? "not allowed for Pampu — turn it on in Settings › Pampu" : "off"). Swiping up and Send Now still work.")
                 }
 
                 Section {

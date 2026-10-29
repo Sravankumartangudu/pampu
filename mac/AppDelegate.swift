@@ -220,9 +220,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         a.informativeText = """
         1. Open \(Brand.name) on your iPhone. The first time, tap Pair and click Allow here (check the code matches).
         2. Pick photos, files or paste a link — or use Share › \(Brand.name) in any app.
-        3. Bring the top of your iPhone close to this Mac. It buzzes, the glow rolls out, and the files drop into \(prefs.folder.path.replacingOccurrences(of: NSHomeDirectory(), with: "~")).
+        3. Bring the top of your iPhone close to this Mac. Both glow; swipe the stack up on the iPhone and the files slide in here, into \(prefs.folder.path.replacingOccurrences(of: NSHomeDirectory(), with: "~")).
 
-        No Bluetooth? Tap Send on the iPhone instead. Both devices just need Wi-Fi and Bluetooth switched on — they don’t have to be on the same network.
+        No Bluetooth? Swiping up (or Send Now) works from anywhere in range. Both devices just need Wi-Fi and Bluetooth switched on — they don’t have to be on the same network.
         """
         a.runModal()
     }
@@ -230,24 +230,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func about() {
         NSApp.activate(ignoringOtherApps: true)
         NSApp.orderFrontStandardAboutPanel(options: [
-            .credits: NSAttributedString(string: "Hold your iPhone close to drop files onto this Mac.\n“Pampu” means “send” in Telugu."),
+            .credits: NSAttributedString(string: "Bring your iPhone close and swipe up to drop files onto this Mac.\n“Pampu” means “send” in Telugu."),
         ])
     }
 
     @objc private func quit() { NSApp.terminate(nil) }
 
-    /// `--demo`: plays the panel's states so they can be checked without a phone.
+    /// `--demo`: plays the panel's states (close, the swipe, the throw, receiving, done) without a phone.
     private func demo() {
         let p = DropPanel.shared
+        let at = { (t: Double, run: @escaping () -> Void) in DispatchQueue.main.asyncAfter(deadline: .now() + t, execute: run) }
         p.near(from: "Demo iPhone")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { p.begin(from: "Demo iPhone", count: 3, names: ["IMG_0042.HEIC"]) }
-        for (n, f) in [(2.5, 0.2), (3.0, 0.55), (3.5, 0.9)] {
-            DispatchQueue.main.asyncAfter(deadline: .now() + n) { p.progress(f, current: "IMG_0042.HEIC", from: "Demo iPhone") }
+        for i in 0...20 { at(1.5 + Double(i) * 0.05) { p.pull(Double(i) / 20, from: "Demo iPhone") } }
+        let samples = ["/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/iPhone.icns",
+                       "/System/Applications/Photos.app", "/System/Applications/Preview.app"].map { URL(fileURLWithPath: $0) }
+        at(3) {
+            p.fling(from: "Demo iPhone", count: 3,
+                    cards: samples.map { DropModel.Card(image: NSWorkspace.shared.icon(forFile: $0.path), symbol: "photo") })
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4.2) {
-            let samples = ["/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/iPhone.icns",
-                           "/System/Applications/Photos.app", "/System/Applications/Preview.app"].map { URL(fileURLWithPath: $0) }
-            p.done(files: samples, from: "Demo iPhone")
+        at(3.4) { p.begin(from: "Demo iPhone", count: 3, names: ["IMG_0042.HEIC"]) }
+        for (n, f) in [(3.8, 0.2), (4.3, 0.55), (4.8, 0.9)] {
+            at(n) { p.progress(f, current: "IMG_0042.HEIC", from: "Demo iPhone") }
         }
+        at(5.5) { p.done(files: samples, from: "Demo iPhone") }
     }
 }

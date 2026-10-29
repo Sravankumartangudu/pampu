@@ -8,6 +8,8 @@
 //              or pair   {id: deviceId, name, code}                                     (first time)
 //   Mac → phone   ok | paired {secret} | denied
 //   phone → Mac   near · batch {count, bytes, names} · text {text} · then one resource per file
+//   phone → Mac   pull {f: 0…1} while the stack is being swiped up (unreliable, ~20 a second;
+//                 the last 0 or 1 reliable) · fling {count, kinds, thumbs} the moment it's let go
 //   Mac → phone   saved {name} after each file
 import Foundation
 import CryptoKit
@@ -34,6 +36,11 @@ struct Wire: Codable, Equatable {
     var count: Int? = nil
     var bytes: Int64? = nil
     var names: [String]? = nil
+    /// How far the swipe has got, 0…1.
+    var f: Double? = nil
+    /// SF Symbol per item, and a small base64 JPEG ("" if none), for the first few items of a fling.
+    var kinds: [String]? = nil
+    var thumbs: [String]? = nil
     var v: Int? = Brand.protocolVersion
 
     var data: Data { (try? JSONEncoder().encode(self)) ?? Data() }

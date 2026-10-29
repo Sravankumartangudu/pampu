@@ -12,7 +12,9 @@ struct Render {
                        "/System/Applications/Photos.app", "/System/Applications/Preview.app"].map { URL(fileURLWithPath: $0) }
         let states: [(String, (DropModel) -> Void)] = [
             ("near", { $0.phase = .near; $0.from = "iPhone" }),
-            ("receiving", { $0.phase = .receiving; $0.from = "iPhone"; $0.count = 3; $0.progress = 0.55; $0.current = "IMG_0042.HEIC" }),
+            ("swipe", { $0.phase = .near; $0.from = "iPhone"; $0.pull = 0.75 }),
+            ("receiving", { m in m.phase = .receiving; m.from = "iPhone"; m.count = 3; m.progress = 0.55; m.current = "IMG_0042.HEIC"
+                            m.incoming = samples.map { DropModel.Card(image: NSWorkspace.shared.icon(forFile: $0.path), symbol: "photo") } }),
             ("done", { m in m.phase = .done; m.from = "iPhone"; m.count = 3; m.files = samples
                        m.message = "Saved to ~/Downloads/Pampu/Photos"
                        for u in samples { m.thumbs[u] = NSWorkspace.shared.icon(forFile: u.path) } }),
@@ -30,7 +32,7 @@ struct Render {
                 win.contentView = host
                 host.frame = NSRect(origin: .zero, size: size)
                 host.layoutSubtreeIfNeeded()
-                RunLoop.main.run(until: Date().addingTimeInterval(0.4))
+                RunLoop.main.run(until: Date().addingTimeInterval(1.5))   // let the slide-ins and the glow settle
                 guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { continue }
                 host.cacheDisplay(in: host.bounds, to: rep)
                 try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: "docs/screenshots/mac-\(name)\(dark ? "-dark" : "").png"))
