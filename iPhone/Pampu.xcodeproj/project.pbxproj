@@ -1,0 +1,502 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		5A000000000000000000002F /* PampuApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000020 /* PampuApp.swift */; };
+		5A0000000000000000000030 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000021 /* ContentView.swift */; };
+		5A0000000000000000000031 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000022 /* SettingsView.swift */; };
+		5A0000000000000000000032 /* DropView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000025 /* DropView.swift */; };
+		5A0000000000000000000033 /* Identity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000026 /* Identity.swift */; };
+		5A0000000000000000000034 /* Proximity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000027 /* Proximity.swift */; };
+		5A0000000000000000000035 /* Sender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000028 /* Sender.swift */; };
+		5A0000000000000000000036 /* Tray.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000029 /* Tray.swift */; };
+		5A0000000000000000000037 /* Wire.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A000000000000000000002A /* Wire.swift */; };
+		5A0000000000000000000038 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000024 /* ShareViewController.swift */; };
+		5A0000000000000000000039 /* DropView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000025 /* DropView.swift */; };
+		5A000000000000000000003A /* Identity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000026 /* Identity.swift */; };
+		5A000000000000000000003B /* Proximity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000027 /* Proximity.swift */; };
+		5A000000000000000000003C /* Sender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000028 /* Sender.swift */; };
+		5A000000000000000000003D /* Tray.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000029 /* Tray.swift */; };
+		5A000000000000000000003E /* Wire.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A000000000000000000002A /* Wire.swift */; };
+		5A000000000000000000003F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000023 /* Assets.xcassets */; };
+		5A000000000000000000001A /* PampuShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000005 /* PampuShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5A0000000000000000000018 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5A0000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5A0000000000000000000007;
+			remoteInfo = PampuShare;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		5A0000000000000000000014 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				5A000000000000000000001A /* PampuShare.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		5A0000000000000000000004 /* Pampu.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pampu.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5A0000000000000000000005 /* PampuShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PampuShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		5A0000000000000000000020 /* PampuApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PampuApp.swift; sourceTree = "<group>"; };
+		5A0000000000000000000021 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		5A0000000000000000000022 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		5A0000000000000000000023 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		5A0000000000000000000024 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		5A0000000000000000000025 /* DropView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropView.swift; sourceTree = "<group>"; };
+		5A0000000000000000000026 /* Identity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Identity.swift; sourceTree = "<group>"; };
+		5A0000000000000000000027 /* Proximity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Proximity.swift; sourceTree = "<group>"; };
+		5A0000000000000000000028 /* Sender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sender.swift; sourceTree = "<group>"; };
+		5A0000000000000000000029 /* Tray.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tray.swift; sourceTree = "<group>"; };
+		5A000000000000000000002A /* Wire.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Wire.swift; sourceTree = "<group>"; };
+		5A000000000000000000002B /* Phone-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Phone-Info.plist; sourceTree = "<group>"; };
+		5A000000000000000000002C /* Share-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Share-Info.plist; sourceTree = "<group>"; };
+		5A000000000000000000002D /* Phone.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Phone.entitlements; sourceTree = "<group>"; };
+		5A000000000000000000002E /* Share.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Share.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		5A0000000000000000000012 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5A0000000000000000000016 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		5A0000000000000000000002 = {
+			isa = PBXGroup;
+			children = (
+				5A000000000000000000001B /* Phone */,
+				5A000000000000000000001C /* Share */,
+				5A000000000000000000001D /* PhoneShared */,
+				5A000000000000000000001E /* Shared */,
+				5A000000000000000000001F /* Config */,
+				5A0000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		5A0000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				5A0000000000000000000004 /* Pampu.app */,
+				5A0000000000000000000005 /* PampuShare.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		5A000000000000000000001B /* Phone */ = {
+			isa = PBXGroup;
+			children = (
+				5A0000000000000000000020 /* PampuApp.swift */,
+				5A0000000000000000000021 /* ContentView.swift */,
+				5A0000000000000000000022 /* SettingsView.swift */,
+				5A0000000000000000000023 /* Assets.xcassets */,
+			);
+			path = Phone;
+			sourceTree = "<group>";
+		};
+		5A000000000000000000001C /* Share */ = {
+			isa = PBXGroup;
+			children = (
+				5A0000000000000000000024 /* ShareViewController.swift */,
+			);
+			path = Share;
+			sourceTree = "<group>";
+		};
+		5A000000000000000000001D /* PhoneShared */ = {
+			isa = PBXGroup;
+			children = (
+				5A0000000000000000000025 /* DropView.swift */,
+				5A0000000000000000000026 /* Identity.swift */,
+				5A0000000000000000000027 /* Proximity.swift */,
+				5A0000000000000000000028 /* Sender.swift */,
+				5A0000000000000000000029 /* Tray.swift */,
+			);
+			path = PhoneShared;
+			sourceTree = "<group>";
+		};
+		5A000000000000000000001E /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				5A000000000000000000002A /* Wire.swift */,
+			);
+			name = Shared;
+			path = ../Shared;
+			sourceTree = "<group>";
+		};
+		5A000000000000000000001F /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				5A000000000000000000002B /* Phone-Info.plist */,
+				5A000000000000000000002C /* Share-Info.plist */,
+				5A000000000000000000002D /* Phone.entitlements */,
+				5A000000000000000000002E /* Share.entitlements */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		5A0000000000000000000006 /* Pampu */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5A0000000000000000000008 /* Build configuration list for PBXNativeTarget "Pampu" */;
+			buildPhases = (
+				5A0000000000000000000011 /* Sources */,
+				5A0000000000000000000012 /* Frameworks */,
+				5A0000000000000000000013 /* Resources */,
+				5A0000000000000000000014 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5A0000000000000000000019 /* PBXTargetDependency */,
+			);
+			name = Pampu;
+			productName = Pampu;
+			productReference = 5A0000000000000000000004 /* Pampu.app */;
+			productType = "com.apple.product-type.application";
+		};
+		5A0000000000000000000007 /* PampuShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5A0000000000000000000009 /* Build configuration list for PBXNativeTarget "PampuShare" */;
+			buildPhases = (
+				5A0000000000000000000015 /* Sources */,
+				5A0000000000000000000016 /* Frameworks */,
+				5A0000000000000000000017 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PampuShare;
+			productName = PampuShare;
+			productReference = 5A0000000000000000000005 /* PampuShare.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		5A0000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2710;
+				LastUpgradeCheck = 2710;
+				TargetAttributes = {
+					5A0000000000000000000006 = {
+						CreatedOnToolsVersion = 27.1;
+					};
+					5A0000000000000000000007 = {
+						CreatedOnToolsVersion = 27.1;
+					};
+				};
+			};
+			buildConfigurationList = 5A000000000000000000000A /* Build configuration list for PBXProject "Pampu" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 5A0000000000000000000002;
+			productRefGroup = 5A0000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				5A0000000000000000000006 /* Pampu */,
+				5A0000000000000000000007 /* PampuShare */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		5A0000000000000000000013 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5A000000000000000000003F /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5A0000000000000000000017 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		5A0000000000000000000011 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5A000000000000000000002F /* PampuApp.swift in Sources */,
+				5A0000000000000000000030 /* ContentView.swift in Sources */,
+				5A0000000000000000000031 /* SettingsView.swift in Sources */,
+				5A0000000000000000000032 /* DropView.swift in Sources */,
+				5A0000000000000000000033 /* Identity.swift in Sources */,
+				5A0000000000000000000034 /* Proximity.swift in Sources */,
+				5A0000000000000000000035 /* Sender.swift in Sources */,
+				5A0000000000000000000036 /* Tray.swift in Sources */,
+				5A0000000000000000000037 /* Wire.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5A0000000000000000000015 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5A0000000000000000000038 /* ShareViewController.swift in Sources */,
+				5A0000000000000000000039 /* DropView.swift in Sources */,
+				5A000000000000000000003A /* Identity.swift in Sources */,
+				5A000000000000000000003B /* Proximity.swift in Sources */,
+				5A000000000000000000003C /* Sender.swift in Sources */,
+				5A000000000000000000003D /* Tray.swift in Sources */,
+				5A000000000000000000003E /* Wire.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		5A0000000000000000000019 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5A0000000000000000000007 /* PampuShare */;
+			targetProxy = 5A0000000000000000000018 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		5A000000000000000000000B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 56PR2VWL8R;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		5A000000000000000000000C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 56PR2VWL8R;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		5A000000000000000000000D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Config/Phone.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 56PR2VWL8R;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/Phone-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Pampu;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Pampu uses Bluetooth to tell when your iPhone is close to your Mac, so it can drop your files.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Sravankumartangudu. MIT License.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Pampu talks directly to your Mac to send files and photos.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stangudu.pampuphone;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		5A000000000000000000000E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Config/Phone.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 56PR2VWL8R;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/Phone-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Pampu;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Pampu uses Bluetooth to tell when your iPhone is close to your Mac, so it can drop your files.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Sravankumartangudu. MIT License.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Pampu talks directly to your Mac to send files and photos.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stangudu.pampuphone;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		5A000000000000000000000F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Config/Share.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 56PR2VWL8R;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/Share-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Pampu;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Pampu uses Bluetooth to tell when your iPhone is close to your Mac, so it can drop your files.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Sravankumartangudu. MIT License.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Pampu talks directly to your Mac to send files and photos.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stangudu.pampuphone.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		5A0000000000000000000010 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Config/Share.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 56PR2VWL8R;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/Share-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Pampu;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Pampu uses Bluetooth to tell when your iPhone is close to your Mac, so it can drop your files.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Sravankumartangudu. MIT License.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Pampu talks directly to your Mac to send files and photos.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stangudu.pampuphone.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		5A000000000000000000000A /* Build configuration list for PBXProject "Pampu" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5A000000000000000000000B /* Debug */,
+				5A000000000000000000000C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5A0000000000000000000008 /* Build configuration list for PBXNativeTarget "Pampu" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5A000000000000000000000D /* Debug */,
+				5A000000000000000000000E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5A0000000000000000000009 /* Build configuration list for PBXNativeTarget "PampuShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5A000000000000000000000F /* Debug */,
+				5A0000000000000000000010 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 5A0000000000000000000001 /* Project object */;
+}
