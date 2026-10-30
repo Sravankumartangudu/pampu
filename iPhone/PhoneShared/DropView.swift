@@ -106,6 +106,9 @@ final class Drop: ObservableObject {
             buzz(.light, stride(from: 0, to: 0.42, by: 0.05).map { $0 }, intensity: 0.8)
             buzz(.heavy, [0.45])
         case .lightning: buzz(.rigid, [0, 0.06, 0.14])
+        case .nameDrop:
+            buzz(.soft, stride(from: 0, to: 0.36 * d, by: 0.09).map { $0 }, intensity: 0.6)
+            buzz(.rigid, [0.62 * d]); buzz(.soft, [0.7 * d, 0.8 * d], intensity: 0.5)
         case .fireworks: buzz(.medium, [0]); buzz(.heavy, [0.36 * d, 0.5 * d, 0.62 * d])
         case .hearts: buzz(.medium, [0.05, 0.25])
         case .confetti: buzz(.heavy, [0]); buzz(.light, [0.15, 0.22, 0.3])

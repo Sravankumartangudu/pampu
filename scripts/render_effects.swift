@@ -44,14 +44,14 @@ struct RenderEffects {
         }
 
         // The most telling moment of each throw, for the contact sheet.
-        let best: [DropEffect: Double] = [.classic: 0.35, .rocket: 0.55, .paperPlane: 0.6, .blackHole: 0.55, .confetti: 0.3,
+        let best: [DropEffect: Double] = [.classic: 0.35, .nameDrop: 0.42, .rocket: 0.55, .paperPlane: 0.6, .blackHole: 0.55, .confetti: 0.3,
                                           .fireworks: 0.55, .hyperspace: 0.5, .comet: 0.6, .bubbles: 0.45, .magic: 0.45,
                                           .lightning: 0.12, .portal: 0.55, .shatter: 0.3, .hearts: 0.6, .tornado: 0.45]
         let all = DropEffect.allCases
         save(VStack(spacing: 6) {
-            ForEach(0..<3) { row in
+            ForEach(0..<(all.count + 3) / 4, id: \.self) { row in
                 HStack(spacing: 6) {
-                    ForEach(all[row * 5 ..< row * 5 + 5]) { e in phone(e, at: best[e] ?? 0.5, label: true) }
+                    ForEach(all[row * 4 ..< min(all.count, row * 4 + 4)]) { e in phone(e, at: best[e] ?? 0.5, label: true) }
                 }
             }
         }.padding(6).background(Color.black), out.appendingPathComponent("effects-iphone.png"))
@@ -87,7 +87,7 @@ struct RenderEffects {
             return img
         }
 
-        let macBest: [DropEffect: Double] = [.classic: 0.25, .lightning: 0.2, .paperPlane: 0.4, .shatter: 0.3, .comet: 0.3,
+        let macBest: [DropEffect: Double] = [.classic: 0.25, .nameDrop: 0.38, .lightning: 0.2, .paperPlane: 0.4, .shatter: 0.3, .comet: 0.3,
                                              .bubbles: 0.5, .fireworks: 0.4, .confetti: 0.35]
         var sheet: [(DropEffect, NSImage)] = []
         for e in all {
@@ -97,7 +97,7 @@ struct RenderEffects {
                  frames.appendingPathComponent("\(e.rawValue)-mac.png"))
         }
         save(VStack(alignment: .leading, spacing: 4) {
-            ForEach(0..<5) { row in
+            ForEach(0..<(sheet.count + 2) / 3, id: \.self) { row in
                 HStack(spacing: 4) {
                     ForEach(sheet[row * 3 ..< min(sheet.count, row * 3 + 3)].indices, id: \.self) { i in
                         Image(nsImage: sheet[i].1)

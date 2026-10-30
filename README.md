@@ -27,7 +27,7 @@ It works without a shared network, so office and guest Wi-Fi are fine.
 |---|---|
 | **Bring it close, swipe up** | Pampu on the Mac sends out a small Bluetooth signal and the iPhone measures how strong it is. Once it's close, both glow and the stack lifts. Swipe it up: the Mac's cards follow your swipe live, and a tick tells you when letting go will drop it. Choose **Touching**, **Close** or **Nearby** in Settings, with a live reading to help. |
 | **Or let it drop by itself** | Pick **Drop Right Away** in Settings and it goes as soon as the iPhone is close. Swiping up and **Send Now** also work at any distance in range, and with Bluetooth off. |
-| **15 drop effects** | 🚀 Rocket, ✈️ Paper Plane, 🕳️ Black Hole, 🎆 Fireworks, ⚡ Lightning, 🌀 Portal and more. The iPhone throws the stack with its own particles and haptics, and the Mac plays the matching landing. Pick one in **Settings › Drop effect** (with a live preview), or **🎲 Random** for a different one every time. |
+| **16 drop effects** | 💧 NameDrop (a glowing drop pulls it up into the top edge, with ripples), 🚀 Rocket, ✈️ Paper Plane, 🕳️ Black Hole, 🎆 Fireworks, ⚡ Lightning, 🌀 Portal and more. The iPhone throws the stack with its own particles and haptics, and the Mac plays the matching landing. Pick one in **Settings › Drop effect** (with a live preview), or **🎲 Random** for a different one every time. |
 | **Swipe it away on the Mac** | Swipe up on the panel with two fingers, or drag it up, to put it away. Mid-drop it stays out of the way and comes back when everything has landed. |
 | **From anywhere on the iPhone** | In the app: **Photos**, **Files** or **Paste**. From any other app: **Share › Pampu** (Photos, Files, Safari, Notes…). Up to 50 items at once. |
 | **No Wi-Fi needed** | A direct, encrypted peer-to-peer link (Apple's MultipeerConnectivity, over peer-to-peer Wi-Fi and Bluetooth). Nothing goes through a server or a cloud, and you don't need an account. |
@@ -67,11 +67,11 @@ It works without a shared network, so office and guest Wi-Fi are fine.
 
 Pick one in **Settings › Drop effect** on the iPhone, or **🎲 Random** (the default) for a new one every drop.
 
-<img src="docs/screenshots/effects-iphone.png" width="820" alt="The 15 throws on the iPhone, mid-flight: Classic, Rocket, Paper Plane, Black Hole, Confetti, Fireworks, Hyperspace, Comet, Bubbles, Magic Dust, Lightning, Portal, Shatter, Hearts and Tornado">
+<img src="docs/screenshots/effects-iphone.png" width="820" alt="The 16 throws on the iPhone, mid-flight: Classic, NameDrop, Rocket, Paper Plane, Black Hole, Confetti, Fireworks, Hyperspace, Comet, Bubbles, Magic Dust, Lightning, Portal, Shatter, Hearts and Tornado">
 
 The Mac plays the matching landing as the cards arrive:
 
-<img src="docs/screenshots/effects-mac.png" width="820" alt="The same 15 effects landing in the Mac panel: rocket flames, a paper plane trail, a black hole, confetti, fireworks, star streaks, a comet, bubbles, magic dust, lightning, portal rings, glass shards, hearts and a tornado">
+<img src="docs/screenshots/effects-mac.png" width="820" alt="The same 16 effects landing in the Mac panel: NameDrop drops and ripples, rocket flames, a paper plane trail, a black hole, confetti, fireworks, star streaks, a comet, bubbles, magic dust, lightning, portal rings, glass shards, hearts and a tornado">
 
 ---
 
@@ -133,7 +133,7 @@ The 🪂 menu on the Mac:
 | **Open Drop Folder / Change Drop Folder…** | `~/Downloads/Pampu` by default. |
 | **Sort Into Folders by Type** · **Open Links Automatically** · **Play Sounds** | On, off, on by default. |
 | **Paired iPhones** | Forget one, or all. A forgotten iPhone has to pair again. |
-| **Landing Effect** | *Same as the iPhone*, 🎲 Random, or always one of the 15. Picking one plays it. |
+| **Landing Effect** | *Same as the iPhone*, 🎲 Random, or always one of the 16. Picking one plays it. |
 | **Appearance** | System, Light or Dark. |
 | **Launch at Login** | Start Pampu when you log in. |
 
@@ -175,7 +175,7 @@ CBCentralManager        ◀── BLE advert (RSSI) ───   CBPeripheralMana
 | `iPhone/Share/` | The Share extension. It sends by itself, so it doesn't need the app to be open. |
 | `iPhone/PhoneShared/` | Shared by both: sender, closeness, tray and the drop screen. |
 | `Shared/Wire.swift` | The message format and the pairing proof, compiled into all three. |
-| `Shared/Effects.swift` | The 15 drop effects: how the stack moves and the particles drawn, for both the throw and the landing. |
+| `Shared/Effects.swift` | The 16 drop effects: how the stack moves and the particles drawn, for both the throw and the landing. |
 
 ## Build from source
 

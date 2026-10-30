@@ -7,7 +7,7 @@
 import SwiftUI
 
 enum DropEffect: String, CaseIterable, Identifiable, Codable {
-    case classic, rocket, paperPlane, blackHole, confetti, fireworks, hyperspace, comet,
+    case classic, nameDrop, rocket, paperPlane, blackHole, confetti, fireworks, hyperspace, comet,
          bubbles, magic, lightning, portal, shatter, hearts, tornado
 
     var id: String { rawValue }
@@ -15,6 +15,7 @@ enum DropEffect: String, CaseIterable, Identifiable, Codable {
     var title: String {
         switch self {
         case .classic: return "Classic"
+        case .nameDrop: return "NameDrop"
         case .rocket: return "Rocket"
         case .paperPlane: return "Paper Plane"
         case .blackHole: return "Black Hole"
@@ -35,6 +36,7 @@ enum DropEffect: String, CaseIterable, Identifiable, Codable {
     var emoji: String {
         switch self {
         case .classic: return "✨"
+        case .nameDrop: return "💧"
         case .rocket: return "🚀"
         case .paperPlane: return "✈️"
         case .blackHole: return "🕳️"
@@ -55,7 +57,8 @@ enum DropEffect: String, CaseIterable, Identifiable, Codable {
     /// One line for the picker.
     var blurb: String {
         switch self {
-        case .classic: return "A clean flick off the top, like NameDrop"
+        case .classic: return "A clean flick off the top"
+        case .nameDrop: return "A glowing drop of light pulls it up, just like NameDrop"
         case .rocket: return "Rumbles, then blasts off on a plume of fire"
         case .paperPlane: return "Folds up and loops away on the breeze"
         case .blackHole: return "Spirals into a swirling void"
@@ -80,7 +83,7 @@ enum DropEffect: String, CaseIterable, Identifiable, Codable {
         case .lightning: return 1.1
         case .confetti, .shatter, .hyperspace: return 1.3
         case .rocket, .comet: return 1.5
-        case .paperPlane, .magic, .portal, .hearts, .tornado: return 1.6
+        case .nameDrop, .paperPlane, .magic, .portal, .hearts, .tornado: return 1.6
         case .blackHole, .fireworks: return 1.8
         case .bubbles: return 1.9
         }
@@ -108,6 +111,22 @@ enum DropEffect: String, CaseIterable, Identifiable, Codable {
             let u = ease(clamp(t / 0.55), .in)
             m.y = -1100 * u
             m.scale = 1 - 0.55 * u
+        case .nameDrop:
+            // A breath while the drop reaches down and catches it, then it's drawn up into the top edge.
+            if t < 0.3 {
+                let k = ease(t / 0.3, .inOut)
+                m.y = -24 * k
+                m.scale = 1 - 0.08 * k
+                m.stretch = 1 + 0.08 * k
+                m.brightness = 0.15 * k
+            } else {
+                let u = ease(clamp((t - 0.3) / 0.4), .in)
+                m.y = -24 - 1000 * u
+                m.scale = 0.92 - 0.75 * u
+                m.stretch = 1.08 + 0.9 * sin(u * .pi)   // pulled long, like a drop
+                m.brightness = 0.15 + 0.5 * u
+                m.opacity = u >= 1 ? 0 : 1
+            }
         case .rocket:
             if t < 0.3 {
                 let k = t / 0.3
@@ -246,6 +265,16 @@ enum DropEffect: String, CaseIterable, Identifiable, Codable {
             m.y = -90 * (1 - s)
             m.angle = Double(side) * 14 * (1 - s)
             m.opacity = clamp(t / 0.2)
+        case .nameDrop:
+            // Each card swells out of the drop at the top centre and springs into its slot.
+            let u = clamp((t - 0.22) / 0.42)
+            let s = ease(u, .out)
+            m.x = -76 * side * CGFloat(1 - s)
+            m.y = CGFloat(-80 * (1 - s))
+            m.scale = CGFloat(0.12 + 0.88 * min(1.06, spring(u)))
+            m.stretch = CGFloat(1 + 0.6 * (1 - ease(u, .out)))
+            m.opacity = u > 0 ? 1 : 0
+            m.brightness = 0.5 * (1 - u)
         case .rocket:
             let u = ease(clamp(t / 0.7), .out)
             m.y = -150 * (1 - u)
@@ -435,6 +464,30 @@ private enum EffectArt {
         switch e {
         case .classic:
             streaks(&g, from: p, count: 10, length: 160 * fade(t, 0, 0.5), spread: 60, color: blue, alpha: 0.5 * (1 - t))
+        case .nameDrop:
+            let top = CGPoint(x: o.x, y: 0)
+            let merge = 0.62
+            edgeGlow(&g, size: size, t: t, alpha: ease(clamp(t / 0.25), .out) * (1 - fade(t, 0.85, 1.2)), corner: 54, width: 22)
+            // The drop: reaches down from the top edge, catches the top of the stack, and shrinks back up with it.
+            let reach = ease(clamp(t / 0.3), .out)
+            let catchY = p.y - 50 * m.scale * m.stretch
+            let tip = CGPoint(x: p.x, y: min(catchY, top.y + (catchY - top.y) * reach))
+            let held = 1 - fade(t, merge - 0.04, merge + 0.06)
+            glow(&g, p, radius: 120 * m.scale, color: blue, alpha: 0.5 * held * reach)
+            liquid(&g, top: top, width: 26 + 26 * reach, tip: tip, bulb: 9 + 17 * m.scale, alpha: held)
+            for i in 0..<44 {   // light running up the drop
+                let s = (r(i, 1) + t * 2.2).truncatingRemainder(dividingBy: 1)
+                let y = tip.y + (top.y - tip.y) * s
+                let w = 6 + 30 * pow(1 - s, 2) * (r(i, 2) - 0.5) * 2
+                dot(&g, CGPoint(x: top.x + w, y: y), radius: 1.2 + 1.8 * r(i, 3), color: .white, alpha: held * reach * (0.4 + 0.6 * s))
+            }
+            // Where it goes in: a flash and ripples rolling out from the top edge.
+            if t > merge - 0.05 {
+                let f = fade(t, merge - 0.05, merge + 0.1)
+                glow(&g, top, radius: 90 + 200 * f, color: .white, alpha: 0.95 * (1 - fade(t, merge + 0.05, merge + 0.45)))
+                glow(&g, top, radius: 260 * f, color: violet, alpha: 0.5 * (1 - fade(t, merge + 0.1, 1.1)))
+            }
+            ripples(&g, at: top, t: (t - merge) / 0.55, count: 4, radius: 340, color: blue)
         case .rocket:
             // Rumble: smoke puffs; lift-off: a flame plume under the stack and smoke left behind.
             let thrust = t < 0.3 ? 0.4 * t / 0.3 : 1 - clamp((t - 0.9) / 0.3)
@@ -665,6 +718,22 @@ private enum EffectArt {
                 streaks(&g, from: CGPoint(x: s.x, y: s.y - 40), count: 5, length: 50 * (1 - fade(t, 0.1, 0.6)), spread: 26,
                         color: blue, alpha: 0.4 * (1 - t), seed: i, down: true)
             }
+        case .nameDrop:
+            let top = CGPoint(x: row.x, y: 0)
+            edgeGlow(&g, size: size, t: t, alpha: fade(t, 0, 0.15) * (1 - fade(t, 0.65, 1)), corner: 18, width: 12)
+            ripples(&g, at: top, t: t / 0.55, count: 2, radius: 200, color: blue)
+            glow(&g, top, radius: 110, color: .white, alpha: 0.7 * ease(clamp(t / 0.2), .out) * (1 - fade(t, 0.4, 0.75)))
+            let n = spots.count
+            for (i, s) in spots.enumerated() {
+                // A drop from the top centre to each card, carrying it down, then let go.
+                let m = e.arrive(t, index: i, of: n)
+                let card = CGPoint(x: s.x + m.x, y: s.y + m.y - 32 * m.scale * m.stretch)
+                let reach = ease(clamp(t / 0.25), .out)
+                let tip = CGPoint(x: top.x + (card.x - top.x) * reach, y: top.y + (card.y - top.y) * reach)
+                let d = Double(i) * 0.08
+                liquid(&g, top: top, width: 22, tip: tip, bulb: 6 + 10 * m.scale, alpha: 1 - fade(t, d + 0.5, d + 0.68))
+                ripples(&g, at: s, t: (t - d - 0.5) / 0.5, count: 3, radius: 70, color: blue)
+            }
         case .rocket:
             for (i, s) in spots.enumerated() {
                 let m = e.arrive(t, index: i, of: spots.count)
@@ -821,6 +890,72 @@ private enum EffectArt {
     }
 
     // MARK: Pieces
+
+    /// A drop of light hanging from `top`: wide where it joins the edge, a thin neck, a round bulb at `tip`.
+    static func liquid(_ g: inout GraphicsContext, top c: CGPoint, width w: Double, tip: CGPoint, bulb b: Double, alpha: Double) {
+        let len = Double(tip.y - c.y)
+        guard alpha > 0.01, len > 2 else { return }
+        func shape(_ w: Double, _ b: Double) -> Path {
+            let neck = max(b * 0.3, 2)
+            let lead = max(b * 1.6, len * 0.35)
+            var p = Path()
+            p.move(to: CGPoint(x: c.x - w, y: c.y - 2))
+            p.addCurve(to: CGPoint(x: tip.x - b, y: tip.y), control1: CGPoint(x: c.x - neck, y: c.y + len * 0.15),
+                       control2: CGPoint(x: tip.x - b, y: tip.y - lead))
+            p.addCurve(to: CGPoint(x: tip.x + b, y: tip.y), control1: CGPoint(x: tip.x - b, y: tip.y + b * 1.33),
+                       control2: CGPoint(x: tip.x + b, y: tip.y + b * 1.33))
+            p.addCurve(to: CGPoint(x: c.x + w, y: c.y - 2), control1: CGPoint(x: tip.x + b, y: tip.y - lead),
+                       control2: CGPoint(x: c.x + neck, y: c.y + len * 0.15))
+            p.closeSubpath()
+            return p
+        }
+        let body = shape(w, b)
+        var soft = g
+        soft.opacity = alpha * 0.8
+        soft.addFilter(.blur(radius: 14))
+        soft.fill(body, with: .color(blue))
+        var c2 = g
+        c2.opacity = alpha * 0.9
+        c2.fill(body, with: .linearGradient(Gradient(colors: [.white, Color(red: 0.55, green: 0.88, blue: 1), blue, violet]),
+                                             startPoint: c, endPoint: CGPoint(x: tip.x, y: tip.y + b)))
+        c2.stroke(body, with: .color(.white.opacity(0.6)), lineWidth: 1.2)
+        var core = g
+        core.opacity = alpha * 0.75
+        core.addFilter(.blur(radius: 3))
+        core.fill(shape(w * 0.3, b * 0.35), with: .color(.white))
+    }
+
+    /// The shimmering rim of light around the screen, brightest along the top where the two devices meet.
+    static func edgeGlow(_ g: inout GraphicsContext, size: CGSize, t: Double, alpha: Double, corner: Double, width: Double) {
+        guard alpha > 0.01 else { return }
+        let rim = Path(roundedRect: CGRect(origin: .zero, size: size).insetBy(dx: 2, dy: 2), cornerRadius: corner, style: .continuous)
+        let shimmer = GraphicsContext.Shading.conicGradient(
+            Gradient(colors: [blue, .white, violet, Color(red: 0.55, green: 0.88, blue: 1), Color(red: 1, green: 0.5, blue: 0.85), blue]),
+            center: CGPoint(x: size.width / 2, y: size.height / 2), angle: .degrees(t * 260))
+        var soft = g
+        soft.opacity = alpha * 0.9
+        soft.addFilter(.blur(radius: width * 0.55))
+        soft.stroke(rim, with: shimmer, lineWidth: width)
+        var sharp = g
+        sharp.opacity = alpha
+        sharp.stroke(rim, with: shimmer, lineWidth: max(2, width * 0.14))
+        let mid = CGPoint(x: size.width / 2, y: 0)
+        g.fill(Path(CGRect(x: 0, y: 0, width: size.width, height: size.width * 0.4)),
+               with: .radialGradient(Gradient(colors: [Color.white.opacity(0.55 * alpha), blue.opacity(0.25 * alpha), .clear]),
+                                     center: mid, startRadius: 0, endRadius: size.width * 0.4))
+    }
+
+    /// Rings of light rolling out from `p` one after another, as `t` goes 0→1.
+    static func ripples(_ g: inout GraphicsContext, at p: CGPoint, t: Double, count: Int, radius: Double, color: Color) {
+        guard t > 0 else { return }
+        for k in 0..<count {
+            let u = (t - Double(k) * 0.14) / 0.7
+            guard u > 0, u < 1 else { continue }
+            let rad = radius * ease(u, .out)
+            ring(&g, p, radius: rad * 0.97, width: 10 * (1 - u), color: color, alpha: 0.4 * (1 - u))
+            ring(&g, p, radius: rad, width: 0.8 + 2.5 * (1 - u), color: .white, alpha: 0.85 * (1 - u))
+        }
+    }
 
     static func dot(_ g: inout GraphicsContext, _ p: CGPoint, radius: Double, color: Color, alpha: Double, blur: Double = 0) {
         guard alpha > 0.01, radius > 0.1 else { return }

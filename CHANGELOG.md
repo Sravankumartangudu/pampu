@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.0 — 2026-10-30
+
+💧 A NameDrop drop effect.
+
+- **New 💧 NameDrop effect**, on both the iPhone and the Mac. On the iPhone, a glowing drop of light
+  reaches down from the top edge, catches the stack and pulls it up, with a shimmering rim around
+  the screen and ripples rolling out where it goes in, plus its own soft haptics. On the Mac, the
+  panel's rim lights up, a drop runs from the top to each slot, and each card swells out of it
+  with a ripple. Pick it in **Settings › Drop effect**, or in 🪂 › Landing Effect. Random picks it too.
+- Classic's description no longer says "like NameDrop".
+
 ## 1.2.2 — 2026-10-30
 
 🔗 The Mac remembers your iPhone.
