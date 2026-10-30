@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.2 — 2026-10-30
+
+🔗 The Mac remembers your iPhone.
+
+- **Paired iPhones are kept when Pampu restarts.** The Mac saved them but couldn't read them back,
+  so after a restart, a log-out or an update it forgot every iPhone and asked you to pair again.
+
 ## 1.2.1 — 2026-10-30
 
 📶 The iPhone's signal bars work.

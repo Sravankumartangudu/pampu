@@ -24,8 +24,11 @@ final class Devices {
     }()
 
     private init() {
+        // Dates are saved as ISO 8601 (see save), so read them back the same way.
+        let dec = JSONDecoder()
+        dec.dateDecodingStrategy = .iso8601
         if let data = try? Data(contentsOf: file),
-           let saved = try? JSONDecoder().decode([Device].self, from: data) {
+           let saved = try? dec.decode([Device].self, from: data) {
             list = saved
         }
     }
