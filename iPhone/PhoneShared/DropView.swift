@@ -12,6 +12,8 @@ final class Drop: ObservableObject {
     let tray = Tray()
 
     @Published private(set) var wave = 0
+    /// How far the stack is swiped up right now, 0…1.
+    @Published private(set) var live = 0.0
     /// The throw playing now: from the moment the stack is let go until its effect has finished and
     /// the drop is done (or it comes back on failure).
     @Published private(set) var launch: Launch?
@@ -68,8 +70,8 @@ final class Drop: ObservableObject {
         let effect = DropEffect.resolve(DropSettings.effect, after: lastEffect)
         lastEffect = effect
         let go = Launch(effect: effect, fromY: y)
-        wave += 1
         armed = false
+        live = 0
         sentPull = 0
         launch = go
         feel(effect)
@@ -125,9 +127,11 @@ final class Drop: ObservableObject {
     /// crosses that point, and passes it on to the Mac a few times a second.
     func pull(_ raw: Double) {
         let f = min(max(raw, 0), 1)
+        if live != f { live = f }
         if (f >= 1) != armed {
             armed = f >= 1
             tick.selectionChanged()
+            if armed { wave += 1 }   // far enough: the wave of light rolls
         }
         let now = Date()
         let final = f == 0 || f == 1
@@ -144,7 +148,13 @@ final class Drop: ObservableObject {
             dropNow()
         } else {
             wave += 1
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            // NameDrop's feel: soft taps building up, then a firm one as the light rolls.
+            let soft = UIImpactFeedbackGenerator(style: .soft), firm = UIImpactFeedbackGenerator(style: .rigid)
+            soft.prepare(); firm.prepare()
+            for (i, at) in [0, 0.08, 0.16, 0.24].enumerated() {
+                DispatchQueue.main.asyncAfter(deadline: .now() + at) { soft.impactOccurred(intensity: 0.4 + 0.15 * Double(i)) }
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.34) { firm.impactOccurred() }
         }
     }
 }
@@ -189,7 +199,7 @@ private struct DropScreen<Accessory: View>: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 12)
             EffectLayer(launch: drop.launch, origin: zoneCenter)
-            TopWave(trigger: drop.wave)
+            TopWave(trigger: drop.wave, holding: proximity.isClose && drop.launch == nil, pull: drop.launch == nil ? drop.live : 0)
                 .ignoresSafeArea()
         }
         .coordinateSpace(name: "drop")
@@ -581,27 +591,27 @@ private struct TrayStrip: View {
     }
 }
 
-/// The NameDrop-style glow that rolls down from the top edge.
+/// NameDrop's touch: a bubble of light out of the top edge and a wave rolling down the screen when the
+/// iPhone comes close and when the swipe is far enough; the bubble stays while it's close and grows with the swipe.
 private struct TopWave: View {
     var trigger: Int
-    @State private var t: CGFloat = 1
+    var holding: Bool
+    var pull: Double
+    @State private var start = Date.distantPast
+    @State private var playing = false
 
     var body: some View {
-        GeometryReader { geo in
-            let w = geo.size.width
-            Ellipse()
-                .fill(RadialGradient(colors: [.white.opacity(0.9), Theme.blue.opacity(0.65), Theme.violet.opacity(0.3), .clear],
-                                     center: .center, startRadius: 0, endRadius: w * 0.7))
-                .frame(width: w * (0.4 + t * 1.6), height: 120 + t * geo.size.height * 0.9)
-                .position(x: w / 2, y: -40 + t * geo.size.height * 0.25)
-                .opacity(Double(1 - t))
-                .blur(radius: 18)
-                .blendMode(.plusLighter)
+        ZStack {
+            if playing || holding || pull > 0 {
+                TouchGlow(start: start, holding: holding, pull: pull, corner: 54)
+            }
         }
         .allowsHitTesting(false)
         .onChange(of: trigger) {
-            t = 0
-            withAnimation(.easeOut(duration: 1.2)) { t = 1 }
+            let now = Date()
+            start = now
+            playing = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + TouchGlow.duration * 1.25) { if start == now { playing = false } }
         }
     }
 }

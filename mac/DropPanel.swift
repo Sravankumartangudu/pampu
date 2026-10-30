@@ -40,6 +40,7 @@ final class DropPanel {
             guard f > 0.02 else { return }
             near(from: from)
         }
+        if f >= 1 && model.pull < 1 { model.wave += 1 }   // far enough: the wave of light rolls
         model.pull = f
         hideWork?.cancel()
         if f == 0 { scheduleHide(3) }
@@ -69,7 +70,6 @@ final class DropPanel {
         model.message = ""
         model.pull = 0
         model.incoming = cards
-        model.wave += 1
         show(hideAfter: nil)
         scheduleHide(20)   // in case nothing follows; the first file cancels this
     }
@@ -370,7 +370,7 @@ struct DropCard: View {
                 LinearGradient(colors: [Color.accentDrop.opacity(0.4 * model.pull), Color.accentDrop2.opacity(0.15 * model.pull), .clear],
                                startPoint: .top, endPoint: .bottom)
                     .animation(.easeOut(duration: 0.15), value: model.pull)
-                Wave(trigger: model.wave)
+                Wave(trigger: model.wave, holding: model.phase == .near, pull: model.phase == .near ? model.pull : 0)
             }
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
@@ -543,31 +543,31 @@ private struct IncomingCard: View {
     }
 }
 
-/// The glow that rolls down from the top edge, like NameDrop's.
+/// NameDrop's touch in the panel: a bubble of light out of the top edge and a wave rolling down, when the
+/// iPhone comes close and when its swipe is far enough; the bubble stays while it's close and grows with the swipe.
 struct Wave: View {
     var trigger: Int
-    @State private var t: CGFloat = 1
+    var holding = false
+    var pull = 0.0
+    @State private var start = Date.distantPast
+    @State private var playing = false
 
     var body: some View {
-        GeometryReader { geo in
-            let w = geo.size.width
-            Ellipse()
-                .fill(RadialGradient(colors: [Color.accentDrop.opacity(0.75), Color.accentDrop2.opacity(0.35), .clear],
-                                     center: .center, startRadius: 0, endRadius: w * 0.55))
-                .frame(width: w * (0.3 + t * 1.4), height: 60 + t * 220)
-                .position(x: w / 2, y: -20 + t * 40)
-                .opacity(Double(1 - t))
-                .blur(radius: 12)
+        ZStack {
+            if playing || holding || pull > 0 {
+                TouchGlow(start: start, holding: holding, pull: pull, corner: 18)
+            }
         }
         .allowsHitTesting(false)
-        .onChange(of: trigger) {
-            t = 0
-            withAnimation(.easeOut(duration: 1.3)) { t = 1 }
-        }
-        .onAppear {
-            t = 0
-            withAnimation(.easeOut(duration: 1.3)) { t = 1 }
-        }
+        .onChange(of: trigger) { play() }
+        .onAppear { play() }
+    }
+
+    private func play() {
+        let now = Date()
+        start = now
+        playing = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + TouchGlow.duration * 1.25) { if start == now { playing = false } }
     }
 }
 

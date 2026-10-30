@@ -62,6 +62,22 @@ struct RenderEffects {
             }.background(Color.black), frames.appendingPathComponent("\(e.rawValue)-iphone.png"))
         }
 
+        // Coming close: NameDrop's touch at several moments, then resting while close and mid-swipe.
+        func touch(_ at: Double, holding: Bool = false, pull: Double = 0) -> some View {
+            ZStack {
+                LinearGradient(colors: [Color(red: 0.05, green: 0.08, blue: 0.2), Color(red: 0.12, green: 0.07, blue: 0.28)],
+                               startPoint: .top, endPoint: .bottom)
+                card.offset(y: 140 - 140 * pull)
+                TouchGlow(start: Date(), holding: holding, pull: pull, corner: 40, frozen: at)
+            }
+            .frame(width: 260, height: 520).clipped()
+        }
+        save(HStack(spacing: 4) {
+            ForEach([0.15, 0.4, 0.7, 1.0, 1.35], id: \.self) { touch($0 * TouchGlow.duration) }
+            touch(99, holding: true)
+            touch(99, holding: true, pull: 0.6)
+        }.background(Color.black), frames.appendingPathComponent("touch-iphone.png"))
+
         // Mac: the panel with cards landing, drawn through an NSHostingView so materials render.
         let samples = ["/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/iPhone.icns",
                        "/System/Applications/Photos.app", "/System/Applications/Preview.app"]

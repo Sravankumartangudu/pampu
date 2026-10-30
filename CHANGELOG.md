@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.0 — 2026-10-30
+
+🫧 The NameDrop touch, while you swipe.
+
+- **Bring the iPhone close and both screens do what NameDrop does.** A bubble of light swells out
+  of the top edge, the rim shimmers, and a wave of light rolls down the whole screen, with soft taps
+  building to a firm one on the iPhone. The Mac's panel plays the same.
+- **It follows your swipe.** While the iPhone is close the bubble stays, breathing. As you swipe the
+  stack up, the bubble and the glowing rim grow with your finger on both the iPhone and the Mac, and
+  the wave rolls again on both the moment you've swiped far enough to drop.
+- **💧 NameDrop drop effect redone** to match: the stack is drawn up into the bubble, it flares, and
+  the wave rolls down. On the Mac each card blooms in as the wave passes over it.
+
 ## 1.3.0 — 2026-10-30
 
 💧 A NameDrop drop effect.

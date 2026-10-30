@@ -6,8 +6,8 @@
 
 **NameDrop for your Mac. Bring your iPhone close, swipe up, and your photos, files and links slide onto it.**
 
-Pick what you want on the iPhone and hold the top of it near your Mac. Both react: the iPhone buzzes
-and glows, and a panel slides down out of the Mac's menu bar with empty slots. Swipe the stack up on
+Pick what you want on the iPhone and hold the top of it near your Mac. Both react like NameDrop: a
+bubble of light swells out of the top of each screen and a wave of light rolls down. The iPhone buzzes, and a panel slides down out of the Mac's menu bar with empty slots. Swipe the stack up on
 the iPhone and cards follow your finger into the Mac's slots; let go and the stack flies off the top
 of the iPhone while its thumbnails slide in on the Mac. Everything lands in `~/Downloads/Pampu`,
 with **Open** and **Show in Finder**.
@@ -25,9 +25,9 @@ It works without a shared network, so office and guest Wi-Fi are fine.
 
 | | |
 |---|---|
-| **Bring it close, swipe up** | Pampu on the Mac sends out a small Bluetooth signal and the iPhone measures how strong it is. Once it's close, both glow and the stack lifts. Swipe it up: the Mac's cards follow your swipe live, and a tick tells you when letting go will drop it. Choose **Touching**, **Close** or **Nearby** in Settings, with a live reading to help. |
+| **Bring it close, swipe up** | Pampu on the Mac sends out a small Bluetooth signal and the iPhone measures how strong it is. Once it's close, both screens do the NameDrop glow and the stack lifts; the bubble grows as you swipe. Swipe it up: the Mac's cards follow your swipe live, and a tick tells you when letting go will drop it. Choose **Touching**, **Close** or **Nearby** in Settings, with a live reading to help. |
 | **Or let it drop by itself** | Pick **Drop Right Away** in Settings and it goes as soon as the iPhone is close. Swiping up and **Send Now** also work at any distance in range, and with Bluetooth off. |
-| **16 drop effects** | 💧 NameDrop (a glowing drop pulls it up into the top edge, with ripples), 🚀 Rocket, ✈️ Paper Plane, 🕳️ Black Hole, 🎆 Fireworks, ⚡ Lightning, 🌀 Portal and more. The iPhone throws the stack with its own particles and haptics, and the Mac plays the matching landing. Pick one in **Settings › Drop effect** (with a live preview), or **🎲 Random** for a different one every time. |
+| **16 drop effects** | 💧 NameDrop (drawn up into a bubble of light that ripples away), 🚀 Rocket, ✈️ Paper Plane, 🕳️ Black Hole, 🎆 Fireworks, ⚡ Lightning, 🌀 Portal and more. The iPhone throws the stack with its own particles and haptics, and the Mac plays the matching landing. Pick one in **Settings › Drop effect** (with a live preview), or **🎲 Random** for a different one every time. |
 | **Swipe it away on the Mac** | Swipe up on the panel with two fingers, or drag it up, to put it away. Mid-drop it stays out of the way and comes back when everything has landed. |
 | **From anywhere on the iPhone** | In the app: **Photos**, **Files** or **Paste**. From any other app: **Share › Pampu** (Photos, Files, Safari, Notes…). Up to 50 items at once. |
 | **No Wi-Fi needed** | A direct, encrypted peer-to-peer link (Apple's MultipeerConnectivity, over peer-to-peer Wi-Fi and Bluetooth). Nothing goes through a server or a cloud, and you don't need an account. |
@@ -71,7 +71,7 @@ Pick one in **Settings › Drop effect** on the iPhone, or **🎲 Random** (the 
 
 The Mac plays the matching landing as the cards arrive:
 
-<img src="docs/screenshots/effects-mac.png" width="820" alt="The same 16 effects landing in the Mac panel: NameDrop drops and ripples, rocket flames, a paper plane trail, a black hole, confetti, fireworks, star streaks, a comet, bubbles, magic dust, lightning, portal rings, glass shards, hearts and a tornado">
+<img src="docs/screenshots/effects-mac.png" width="820" alt="The same 16 effects landing in the Mac panel: a NameDrop bubble and wave, rocket flames, a paper plane trail, a black hole, confetti, fireworks, star streaks, a comet, bubbles, magic dust, lightning, portal rings, glass shards, hearts and a tornado">
 
 ---
 
